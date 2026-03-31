@@ -8,6 +8,11 @@ import { getAccessToken } from '../utils/storage'
 
 const LoginView = () => import('../views/auth/LoginView.vue')
 const DashboardView = () => import('../views/dashboard/DashboardView.vue')
+const UsersListView = () => import('../views/users/UsersListView.vue')
+const EmployeesListView = () => import('../views/employees/EmployeesListView.vue')
+const ShiftsListView = () => import('../views/shifts/ShiftsListView.vue')
+const SchedulesListView = () => import('../views/schedules/SchedulesListView.vue')
+const MetricsView = () => import('../views/metrics/EquityAnalysisView.vue')
 const NotFoundView = () => import('../views/errors/NotFoundView.vue')
 
 const routes: RouteRecordRaw[] = [
@@ -31,6 +36,51 @@ const routes: RouteRecordRaw[] = [
     meta: {
       requiresAuth: true,
       title: 'Dashboard',
+    },
+  },
+  {
+    path: '/users',
+    name: 'users',
+    component: UsersListView,
+    meta: {
+      requiresAuth: true,
+      title: 'Users',
+    },
+  },
+  {
+    path: '/employees',
+    name: 'employees',
+    component: EmployeesListView,
+    meta: {
+      requiresAuth: true,
+      title: 'Employees',
+    },
+  },
+  {
+    path: '/shifts',
+    name: 'shifts',
+    component: ShiftsListView,
+    meta: {
+      requiresAuth: true,
+      title: 'Shifts',
+    },
+  },
+  {
+    path: '/schedules',
+    name: 'schedules',
+    component: SchedulesListView,
+    meta: {
+      requiresAuth: true,
+      title: 'Schedules',
+    },
+  },
+  {
+    path: '/metrics',
+    name: 'metrics',
+    component: MetricsView,
+    meta: {
+      requiresAuth: true,
+      title: 'Metrics',
     },
   },
   {
