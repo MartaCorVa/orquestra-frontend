@@ -99,22 +99,20 @@ const router = createRouter({
   routes,
 })
 
-router.beforeEach((to, _from, next) => {
+router.beforeEach((to) => {
   const token = getAccessToken()
   const isAuthenticated = Boolean(token)
   const requiresAuth = to.meta.requiresAuth === true
 
   if (requiresAuth && !isAuthenticated) {
-    next({ name: 'login' })
-    return
+    return { name: 'login' }
   }
 
   if (to.name === 'login' && isAuthenticated) {
-    next({ name: 'dashboard' })
-    return
+    return { name: 'dashboard' }
   }
 
-  next()
+  return true
 })
 
 export default router

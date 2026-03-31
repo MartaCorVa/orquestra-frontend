@@ -71,7 +71,8 @@
                 <input
                   v-model="form.username"
                   type="email"
-                  class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-blue-600"
+                  placeholder="admin@orquestra.com"
+                  class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-600"
                   :disabled="authStore.isLoading"
                 />
               </div>
@@ -83,7 +84,8 @@
                 <input
                   v-model="form.password"
                   type="password"
-                  class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-blue-600"
+                  placeholder="••••••••"
+                  class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-600"
                   :disabled="authStore.isLoading"
                 />
               </div>
