@@ -4,14 +4,16 @@ import {
   type RouteRecordRaw,
 } from 'vue-router'
 
+import { getAccessToken } from '../utils/storage'
+
 const LoginView = () => import('../views/auth/LoginView.vue')
-const DashboardView = () => import('../views/dashboard/dashboardView.vue')
+const DashboardView = () => import('../views/dashboard/DashboardView.vue')
 const NotFoundView = () => import('../views/errors/NotFoundView.vue')
 
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    redirect: '/login',
+    redirect: '/dashboard',
   },
   {
     path: '/login',
@@ -48,10 +50,9 @@ const router = createRouter({
 })
 
 router.beforeEach((to, _from, next) => {
-  const token = localStorage.getItem('access_token')
+  const token = getAccessToken()
   const isAuthenticated = Boolean(token)
   const requiresAuth = to.meta.requiresAuth === true
-  const isPublic = to.meta.public === true
 
   if (requiresAuth && !isAuthenticated) {
     next({ name: 'login' })
@@ -63,12 +64,7 @@ router.beforeEach((to, _from, next) => {
     return
   }
 
-  if (isPublic || isAuthenticated) {
-    next()
-    return
-  }
-
-  next({ name: 'login' })
+  next()
 })
 
 export default router

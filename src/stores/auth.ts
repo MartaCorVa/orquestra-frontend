@@ -1,39 +1,61 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 
-export interface AuthUser {
-  id: number
-  email: string
-  role: string
-}
+import { loginRequest } from '../api/auth'
+import { getAccessToken, removeAccessToken, setAccessToken } from '../utils/storage'
+import type { AuthUser, LoginCredentials } from '../types/auth'
 
 export const useAuthStore = defineStore('auth', () => {
-  const token = ref<string | null>(localStorage.getItem('access_token'))
+  const token = ref<string | null>(getAccessToken())
   const user = ref<AuthUser | null>(null)
+  const isLoading = ref<boolean>(false)
+  const errorMessage = ref<string>('')
 
   const isAuthenticated = computed<boolean>(() => token.value !== null)
+  const userRole = computed<string | null>(() => user.value?.role ?? null)
 
-  function setToken(newToken: string): void {
-    token.value = newToken
-    localStorage.setItem('access_token', newToken)
+  async function login(credentials: LoginCredentials): Promise<void> {
+    isLoading.value = true
+    errorMessage.value = ''
+
+    try {
+      const response = await loginRequest(credentials)
+
+      token.value = response.access_token
+      setAccessToken(response.access_token)
+    } catch (error: unknown) {
+      errorMessage.value = 'Invalid credentials. Please try again.'
+      throw error
+    } finally {
+      isLoading.value = false
+    }
   }
 
-  function clearAuth(): void {
+  function logout(): void {
     token.value = null
     user.value = null
-    localStorage.removeItem('access_token')
+    errorMessage.value = ''
+    removeAccessToken()
   }
 
   function setUser(authUser: AuthUser): void {
     user.value = authUser
   }
 
+  function clearError(): void {
+    errorMessage.value = ''
+  }
+
   return {
     token,
     user,
+    isLoading,
+    errorMessage,
     isAuthenticated,
-    setToken,
-    clearAuth,
+    userRole,
+    login,
+    logout,
     setUser,
+    clearError,
   }
 })

@@ -3,8 +3,10 @@ import axios, {
   type InternalAxiosRequestConfig,
 } from 'axios'
 
+import { getAccessToken, removeAccessToken } from '../utils/storage'
+
 const apiClient = axios.create({
-  baseURL: 'http://localhost:8000',
+  baseURL: import.meta.env.VITE_API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -12,7 +14,7 @@ const apiClient = axios.create({
 
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
-    const token = localStorage.getItem('access_token')
+    const token = getAccessToken()
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
@@ -21,6 +23,17 @@ apiClient.interceptors.request.use(
     return config
   },
   async (error: AxiosError): Promise<never> => Promise.reject(error),
+)
+
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error: AxiosError): Promise<never> => {
+    if (error.response?.status === 401) {
+      removeAccessToken()
+    }
+
+    return Promise.reject(error)
+  },
 )
 
 export default apiClient

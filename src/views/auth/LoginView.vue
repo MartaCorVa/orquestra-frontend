@@ -1,46 +1,147 @@
 <template>
-  <main class="flex min-h-screen items-center justify-center bg-slate-50 px-6">
-    <section class="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-      <h1 class="mb-2 text-2xl font-semibold text-slate-900">Sign in</h1>
-      <p class="mb-6 text-sm text-slate-600">
-        Enter your credentials to access Orquestra.
-      </p>
-
-      <form class="space-y-4">
-        <div>
-          <label for="email" class="mb-2 block text-sm font-medium text-slate-700">
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            class="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-600"
-            placeholder="admin@orquestra.com"
-          />
-        </div>
-
-        <div>
-          <label for="password" class="mb-2 block text-sm font-medium text-slate-700">
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            class="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-600"
-            placeholder="••••••••"
-          />
-        </div>
-
-        <button
-          type="submit"
-          class="w-full rounded-xl bg-blue-600 px-4 py-3 font-medium text-white transition hover:bg-blue-700"
+  <main class="h-screen w-full">
+    <section class="h-full w-full">
+      <div class="grid h-full w-full lg:grid-cols-[1.05fr_0.95fr]">
+        <!-- LEFT PANEL -->
+        <div
+          class="relative flex h-full bg-[radial-gradient(circle_at_top_left,#1e3a8a_0%,#1d4ed8_45%,#0f172a_100%)] px-8 py-10 text-white lg:px-12 lg:py-14"
         >
-          Login
-        </button>
-      </form>
+          <!-- TOP LEFT BRAND -->
+          <p class="absolute top-10 left-8 text-sm font-semibold uppercase tracking-[0.2em] text-blue-100 lg:left-12">
+            Orquestra
+          </p>
+
+          <!-- CENTER CONTENT -->
+          <div class="flex w-full items-center justify-center">
+            <div class="w-full max-w-3xl">
+              <h1 class="text-4xl font-semibold leading-tight lg:text-5xl">
+                Organize weekly shifts in a simple, fast, and fair way.
+              </h1>
+
+              <p class="mt-6 text-base leading-7 text-blue-100">
+                Access the system to manage employees, validate restrictions,
+                and automatically generate the schedule.
+              </p>
+
+              <div class="mt-10 grid max-w-3xl gap-4">
+                <article class="rounded-3xl border border-white/15 bg-white/10 p-5 backdrop-blur-sm">
+                  <h2 class="text-base font-semibold text-white">
+                    Automatic planning
+                  </h2>
+                  <p class="mt-2 text-sm leading-6 text-blue-100">
+                    Intelligent shift generation based on rules, availability,
+                    and workload distribution.
+                  </p>
+                </article>
+
+                <article class="rounded-3xl border border-white/15 bg-white/10 p-5 backdrop-blur-sm">
+                  <h2 class="text-base font-semibold text-white">
+                    Equity analysis
+                  </h2>
+                  <p class="mt-2 text-sm leading-6 text-blue-100">
+                    Visualize assigned hours and detect imbalances across employees
+                    in a clear way.
+                  </p>
+                </article>
+              </div>
+            </div>
+          </div>
+
+          <!-- BOTTOM TEXT -->
+          <p class="absolute bottom-10 left-8 text-sm text-blue-100 lg:left-12">
+            Web-based shift management system · TFG
+          </p>
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div class="flex h-full items-center justify-center bg-white px-6 py-10 lg:px-12">
+          <div class="w-full max-w-md">
+            <div class="mb-6">
+              <h2 class="text-2xl font-semibold text-slate-900">Sign in</h2>
+              <p class="mt-1 text-sm text-slate-600">
+                Enter your credentials to access the application.
+              </p>
+            </div>
+
+            <form class="space-y-4" @submit.prevent="handleSubmit">
+              <div>
+                <label class="mb-1 block text-sm font-medium text-slate-700">
+                  Email
+                </label>
+                <input
+                  v-model="form.username"
+                  type="email"
+                  class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-blue-600"
+                  :disabled="authStore.isLoading"
+                />
+              </div>
+
+              <div>
+                <label class="mb-1 block text-sm font-medium text-slate-700">
+                  Password
+                </label>
+                <input
+                  v-model="form.password"
+                  type="password"
+                  class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-blue-600"
+                  :disabled="authStore.isLoading"
+                />
+              </div>
+
+              <div class="flex items-center justify-between text-xs text-slate-500">
+                <label class="flex items-center gap-2">
+                  <input type="checkbox" class="h-4 w-4" disabled />
+                  <span>Remember me</span>
+                </label>
+
+                <span class="text-slate-400">Forgot password?</span>
+              </div>
+
+              <p
+                v-if="authStore.errorMessage"
+                class="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+              >
+                {{ authStore.errorMessage }}
+              </p>
+
+              <button
+                type="submit"
+                class="w-full rounded-xl bg-blue-700 py-2.5 text-sm font-semibold text-white hover:bg-blue-800 disabled:opacity-70"
+                :disabled="authStore.isLoading"
+              >
+                {{ authStore.isLoading ? 'Signing in...' : 'Login' }}
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
     </section>
   </main>
 </template>
 
 <script setup lang="ts">
+import { reactive } from 'vue'
+import { useRouter } from 'vue-router'
+
+import { useAuthStore } from '../../stores/auth'
+import type { LoginCredentials } from '../../types/auth'
+
+const router = useRouter()
+const authStore = useAuthStore()
+
+const form = reactive<LoginCredentials>({
+  username: '',
+  password: '',
+})
+
+async function handleSubmit(): Promise<void> {
+  authStore.clearError()
+
+  try {
+    await authStore.login(form)
+    await router.push({ name: 'dashboard' })
+  } catch {
+    // handled in store
+  }
+}
 </script>
