@@ -1,5 +1,9 @@
 import apiClient from './axios'
-import type { LoginCredentials, LoginResponse } from '../types/auth'
+import type {
+  ChangePasswordPayload,
+  LoginCredentials,
+  LoginResponse,
+} from '../types/auth'
 
 export async function loginRequest(
   credentials: LoginCredentials,
@@ -19,4 +23,10 @@ export async function loginRequest(
   )
 
   return response.data
+}
+
+export async function changePasswordRequest(
+  payload: ChangePasswordPayload,
+): Promise<void> {
+  await apiClient.post('/auth/change-password', payload)
 }

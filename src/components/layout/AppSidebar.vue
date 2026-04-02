@@ -40,7 +40,6 @@ const authStore = useAuthStore()
 
 const items: NavigationItem[] = [
   { label: 'Dashboard', to: '/dashboard' },
-  { label: 'Users', to: '/users' },
   { label: 'Employees', to: '/employees' },
   { label: 'Shifts', to: '/shifts' },
   { label: 'Schedules', to: '/schedules' },

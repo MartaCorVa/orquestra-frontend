@@ -4,12 +4,16 @@ import {
   type RouteRecordRaw,
 } from 'vue-router'
 
-import { getAccessToken } from '../utils/storage'
+import {
+  getAccessToken,
+  getMustChangePassword,
+} from '../utils/storage'
 
 const LoginView = () => import('../views/auth/LoginView.vue')
+const ChangePasswordView = () => import('../views/auth/ChangePasswordView.vue')
 const DashboardView = () => import('../views/dashboard/DashboardView.vue')
-const UsersListView = () => import('../views/users/UsersListView.vue')
 const EmployeesListView = () => import('../views/employees/EmployeesListView.vue')
+const EmployeeOnboardingView = () => import('../views/employees/EmployeeOnboardingView.vue')
 const ShiftsListView = () => import('../views/shifts/ShiftsListView.vue')
 const SchedulesListView = () => import('../views/schedules/SchedulesListView.vue')
 const MetricsView = () => import('../views/metrics/EquityAnalysisView.vue')
@@ -30,6 +34,15 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/change-password',
+    name: 'change-password',
+    component: ChangePasswordView,
+    meta: {
+      requiresAuth: true,
+      title: 'Change Password',
+    },
+  },
+  {
     path: '/dashboard',
     name: 'dashboard',
     component: DashboardView,
@@ -39,21 +52,21 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
-    path: '/users',
-    name: 'users',
-    component: UsersListView,
-    meta: {
-      requiresAuth: true,
-      title: 'Users',
-    },
-  },
-  {
     path: '/employees',
     name: 'employees',
     component: EmployeesListView,
     meta: {
       requiresAuth: true,
       title: 'Employees',
+    },
+  },
+  {
+    path: '/employees/new',
+    name: 'employee-create',
+    component: EmployeeOnboardingView,
+    meta: {
+      requiresAuth: true,
+      title: 'Create Employee',
     },
   },
   {
@@ -80,7 +93,7 @@ const routes: RouteRecordRaw[] = [
     component: MetricsView,
     meta: {
       requiresAuth: true,
-      title: 'Metrics',
+      title: 'Equity analysis',
     },
   },
   {
@@ -101,14 +114,27 @@ const router = createRouter({
 
 router.beforeEach((to) => {
   const token = getAccessToken()
+  const mustChangePassword = getMustChangePassword()
   const isAuthenticated = Boolean(token)
   const requiresAuth = to.meta.requiresAuth === true
+  const isLoginRoute = to.name === 'login'
+  const isChangePasswordRoute = to.name === 'change-password'
 
-  if (requiresAuth && !isAuthenticated) {
+  if (!isAuthenticated && requiresAuth) {
     return { name: 'login' }
   }
 
-  if (to.name === 'login' && isAuthenticated) {
+  if (isAuthenticated && mustChangePassword && !isChangePasswordRoute) {
+    return { name: 'change-password' }
+  }
+
+  if (isAuthenticated && isLoginRoute) {
+    return mustChangePassword
+      ? { name: 'change-password' }
+      : { name: 'dashboard' }
+  }
+
+  if (isAuthenticated && !mustChangePassword && isChangePasswordRoute) {
     return { name: 'dashboard' }
   }
 
