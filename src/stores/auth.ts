@@ -1,6 +1,5 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
-import { AxiosError } from 'axios'
 
 import { changePasswordRequest, loginRequest } from '../api/auth'
 import {
@@ -10,27 +9,12 @@ import {
   setAccessToken,
   setMustChangePassword,
 } from '../utils/storage'
+import { getBackendErrorMessage } from '../utils/api'
 import type {
   AuthUser,
   ChangePasswordPayload,
   LoginCredentials,
 } from '../types/auth'
-
-interface BackendErrorResponse {
-  detail?: string
-}
-
-function getBackendErrorMessage(error: unknown, fallbackMessage: string): string {
-  if (error instanceof AxiosError) {
-    const backendMessage = (error.response?.data as BackendErrorResponse | undefined)?.detail
-
-    if (typeof backendMessage === 'string' && backendMessage.trim().length > 0) {
-      return backendMessage
-    }
-  }
-
-  return fallbackMessage
-}
 
 export const useAuthStore = defineStore('auth', () => {
   const accessToken = ref<string | null>(null)
