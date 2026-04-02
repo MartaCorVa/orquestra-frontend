@@ -12,8 +12,8 @@ import {
 const LoginView = () => import('../views/auth/LoginView.vue')
 const ChangePasswordView = () => import('../views/auth/ChangePasswordView.vue')
 const DashboardView = () => import('../views/dashboard/DashboardView.vue')
-const UsersListView = () => import('../views/users/UsersListView.vue')
 const EmployeesListView = () => import('../views/employees/EmployeesListView.vue')
+const EmployeeOnboardingView = () => import('../views/employees/EmployeeOnboardingView.vue')
 const ShiftsListView = () => import('../views/shifts/ShiftsListView.vue')
 const SchedulesListView = () => import('../views/schedules/SchedulesListView.vue')
 const MetricsView = () => import('../views/metrics/EquityAnalysisView.vue')
@@ -52,21 +52,21 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
-    path: '/users',
-    name: 'users',
-    component: UsersListView,
-    meta: {
-      requiresAuth: true,
-      title: 'Users',
-    },
-  },
-  {
     path: '/employees',
     name: 'employees',
     component: EmployeesListView,
     meta: {
       requiresAuth: true,
       title: 'Employees',
+    },
+  },
+  {
+    path: '/employees/new',
+    name: 'employee-create',
+    component: EmployeeOnboardingView,
+    meta: {
+      requiresAuth: true,
+      title: 'Create Employee',
     },
   },
   {
