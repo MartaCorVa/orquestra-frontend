@@ -3,7 +3,7 @@ import axios, {
   type InternalAxiosRequestConfig,
 } from 'axios'
 
-import { getAccessToken, removeAccessToken } from '../utils/storage'
+import { clearAuthStorage, getAccessToken } from '../utils/storage'
 
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -29,7 +29,7 @@ apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError): Promise<never> => {
     if (error.response?.status === 401) {
-      removeAccessToken()
+      clearAuthStorage()
     }
 
     return Promise.reject(error)

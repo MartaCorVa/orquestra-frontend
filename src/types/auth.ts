@@ -6,6 +6,12 @@ export interface LoginCredentials {
 export interface LoginResponse {
   access_token: string
   token_type: string
+  must_change_password: boolean
+}
+
+export interface ChangePasswordPayload {
+  current_password: string
+  new_password: string
 }
 
 export interface AuthUser {
