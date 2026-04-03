@@ -12,6 +12,7 @@ import {
 const LoginView = () => import('../views/auth/LoginView.vue')
 const ChangePasswordView = () => import('../views/auth/ChangePasswordView.vue')
 const DashboardView = () => import('../views/dashboard/DashboardView.vue')
+const EmployeeEditView = () => import('../views/employees/EmployeeEditView.vue')
 const EmployeesListView = () => import('../views/employees/EmployeesListView.vue')
 const EmployeeOnboardingView = () => import('../views/employees/EmployeeOnboardingView.vue')
 const ShiftsListView = () => import('../views/shifts/ShiftsListView.vue')
@@ -67,6 +68,15 @@ const routes: RouteRecordRaw[] = [
     meta: {
       requiresAuth: true,
       title: 'Create Employee',
+    },
+  },
+  {
+    path: '/employees/:id/edit',
+    name: 'employee-edit',
+    component: EmployeeEditView,
+    meta: {
+      requiresAuth: true,
+      title: 'Edit Employee',
     },
   },
   {

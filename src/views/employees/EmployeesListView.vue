@@ -46,6 +46,7 @@
                 <th class="px-6 py-4 font-semibold">Max weekly hours</th>
                 <th class="px-6 py-4 font-semibold">Status</th>
                 <th class="px-6 py-4 font-semibold">Created</th>
+                <th class="px-6 py-4 font-semibold">Actions</th>
               </tr>
             </thead>
 
@@ -82,6 +83,17 @@
 
                 <td class="px-6 py-4 text-slate-600">
                   {{ formatDate(employee.created_at) }}
+                </td>
+
+                <td class="px-6 py-4">
+                  <div class="flex gap-2">
+                    <RouterLink
+                      :to="`/employees/${employee.id}/edit`"
+                      class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-100"
+                    >
+                      Edit
+                    </RouterLink>
+                  </div>
                 </td>
               </tr>
             </tbody>
