@@ -28,7 +28,6 @@ This repository contains the frontend of the system, built as a Single Page Appl
 ```bash
 npm install
 ```
-
 ---
 
 ## 🧪 Run the project
@@ -70,6 +69,73 @@ Example file:
 ```
 .env.example
 ```
+---
+
+## 🔐 Authentication flow
+
+The application uses JWT-based authentication and supports a **first-login password change flow**.
+
+### Login
+
+* Endpoint: `POST /auth/login`
+* The backend returns:
+  * `access_token`
+  * `must_change_password`
+
+### Frontend behavior
+
+* The token is stored in local storage  
+* If `must_change_password = true`:
+  * the user is redirected to `/change-password`
+  * access to the rest of the application is blocked  
+* If `false`:
+  * the user is redirected to the dashboard  
+
+### Change password (first login)
+
+* Endpoint: `POST /auth/change-password`  
+* Requires authentication (Bearer token)  
+* After success:
+  * `must_change_password` is set to false  
+  * the user is redirected to the dashboard  
+
+---
+
+## 👥 Employee onboarding (admin)
+
+Employee creation is handled through a **single onboarding operation**.
+
+### Endpoint
+
+`POST /employees/onboarding`
+
+### Behavior
+
+* Creates both:
+  * user account  
+  * employee profile  
+* Links both entities internally  
+* The created user has:
+  * `must_change_password = true`  
+
+### Frontend behavior
+
+* Admin fills a single form  
+* Only one request is sent to the backend  
+* No separate user creation is exposed in the UI  
+
+---
+
+## 🧠 Application behavior
+
+The frontend enforces business rules defined by the backend:
+
+* Protected routes require authentication  
+* Users with `must_change_password = true`:
+  * cannot access the application  
+  * are forced to complete the password change  
+* Authentication state is persisted using local storage  
+* Backend validation errors are displayed directly in the UI  
 
 ---
 
@@ -88,3 +154,10 @@ src/
 ```
 
 ---
+
+## 📌 Notes
+
+* The frontend is designed around **employee management**, not separate user management  
+* Account creation is performed through employee onboarding  
+* The UI prioritizes clarity and stability for desktop usage  
+* Layout decisions (fixed widths, table stability) were made to improve usability and visual consistency  
