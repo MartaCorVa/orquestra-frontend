@@ -16,6 +16,8 @@ const EmployeeEditView = () => import('../views/employees/EmployeeEditView.vue')
 const EmployeesListView = () => import('../views/employees/EmployeesListView.vue')
 const EmployeeOnboardingView = () => import('../views/employees/EmployeeOnboardingView.vue')
 const ShiftsListView = () => import('../views/shifts/ShiftsListView.vue')
+const ScheduleCreateView = () => import('../views/schedules/ScheduleCreateView.vue')
+const ScheduleDetailView = () => import('../views/schedules/ScheduleDetailView.vue')
 const SchedulesListView = () => import('../views/schedules/SchedulesListView.vue')
 const MetricsView = () => import('../views/metrics/EquityAnalysisView.vue')
 const NotFoundView = () => import('../views/errors/NotFoundView.vue')
@@ -95,6 +97,24 @@ const routes: RouteRecordRaw[] = [
     meta: {
       requiresAuth: true,
       title: 'Schedules',
+    },
+  },
+  {
+    path: '/schedules/new',
+    name: 'schedule-create',
+    component: ScheduleCreateView,
+    meta: {
+      requiresAuth: true,
+      title: 'Create Schedule',
+    },
+  },
+  {
+    path: '/schedules/:id',
+    name: 'schedule-detail',
+    component: ScheduleDetailView,
+    meta: {
+      requiresAuth: true,
+      title: 'Schedule Detail',
     },
   },
   {
