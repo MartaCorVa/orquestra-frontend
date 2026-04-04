@@ -126,6 +126,49 @@ Employee creation is handled through a **single onboarding operation**.
 
 ---
 
+## 📅 Schedule management
+
+The application allows administrators to manage schedules and generate planning automatically.
+
+### Features
+
+* View list of schedules
+* Create schedules with date range and status
+* View schedule details
+* Delete schedules
+
+### Schedule detail view
+
+* Displays all shifts associated with the schedule
+* Shows assignments grouped by date
+* Provides a weekly overview of planning
+
+---
+
+## ⚙️ Planning generation
+
+The system supports automatic planning generation based on backend logic.
+
+### Endpoint
+
+```
+POST /planning/generate/{schedule_id}
+```
+
+### Behavior
+
+* Generates assignments for the selected schedule
+* Uses backend rules (availability, workload, constraints)
+* Updates shifts and assignments automatically
+
+### Frontend behavior
+
+* User triggers generation from schedule detail view
+* The UI refreshes to display updated planning
+* Feedback is provided through loading states and error handling
+
+---
+
 ## 🧠 Application behavior
 
 The frontend enforces business rules defined by the backend:
