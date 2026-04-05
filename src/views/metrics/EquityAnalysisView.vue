@@ -147,6 +147,104 @@
           </section>
         </section>
       </template>
+      <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="mb-6">
+          <h2 class="text-xl font-semibold text-slate-900">Workload analysis</h2>
+          <p class="mt-1 text-sm text-slate-500">
+            Analyze assigned workload across a custom date range.
+          </p>
+        </div>
+
+        <div class="grid gap-4 lg:grid-cols-[1fr_1fr_auto] lg:items-end">
+          <div>
+            <label
+              for="start-date"
+              class="mb-2 block text-sm font-medium text-slate-700"
+            >
+              Start date
+            </label>
+            <input
+              id="start-date"
+              v-model="startDate"
+              type="date"
+              class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-600"
+              :disabled="isLoadingWorkload"
+            />
+          </div>
+
+          <div>
+            <label
+              for="end-date"
+              class="mb-2 block text-sm font-medium text-slate-700"
+            >
+              End date
+            </label>
+            <input
+              id="end-date"
+              v-model="endDate"
+              type="date"
+              class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-600"
+              :disabled="isLoadingWorkload"
+            />
+          </div>
+
+          <button
+            type="button"
+            class="rounded-xl bg-blue-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-70"
+            :disabled="isLoadingWorkload"
+            @click="loadWorkload"
+          >
+            {{ isLoadingWorkload ? 'Loading...' : 'Load workload' }}
+          </button>
+        </div>
+      </section>
+
+      <section
+        v-if="workloadData"
+        class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
+      >
+        <div class="mb-6 flex items-start justify-between gap-4">
+          <div>
+            <h2 class="text-xl font-semibold text-slate-900">Workload results</h2>
+            <p class="mt-1 text-sm text-slate-500">
+              {{ formatDate(workloadData.start_date) }} - {{ formatDate(workloadData.end_date) }}
+            </p>
+          </div>
+
+          <div class="text-right">
+            <p class="text-sm text-slate-500">Total assigned hours</p>
+            <p class="mt-1 text-2xl font-semibold text-slate-900">
+              {{ workloadData.total_assigned_hours }}h
+            </p>
+          </div>
+        </div>
+
+        <div class="space-y-3">
+          <article
+            v-for="employee in workloadData.employees"
+            :key="employee.employee_id"
+            class="flex items-center justify-between rounded-2xl border border-slate-200 p-4"
+          >
+            <div>
+              <p class="font-medium text-slate-900">
+                {{ employee.employee_name }}
+              </p>
+              <p class="mt-1 text-sm text-slate-500">
+                Max weekly hours: {{ employee.max_weekly_hours }}h
+              </p>
+            </div>
+
+            <div class="text-right">
+              <p class="font-semibold text-slate-900">
+                {{ employee.assigned_hours }}h
+              </p>
+              <p class="mt-1 text-sm text-slate-500">
+                {{ employee.workload_percentage.toFixed(1) }}%
+              </p>
+            </div>
+          </article>
+        </div>
+      </section>
     </section>
   </AppShell>
 </template>
@@ -156,10 +254,13 @@ import { computed, onMounted, ref } from 'vue'
 import dayjs from 'dayjs'
 
 import AppShell from '../../components/layout/AppShell.vue'
-import { getScheduleFairness } from '../../api/metrics'
+import { getScheduleFairness, getWorkloadMetrics } from '../../api/metrics'
 import { getSchedules, type Schedule } from '../../api/schedules'
 import { getBackendErrorMessage } from '../../utils/api'
-import type { ScheduleFairnessResponse } from '../../types/metrics'
+import type {
+  ScheduleFairnessResponse,
+  WorkloadMetricsResponse,
+} from '../../types/metrics'
 
 interface SummaryCard {
   label: string
@@ -176,9 +277,14 @@ interface InsightItem {
 const schedules = ref<Schedule[]>([])
 const selectedScheduleId = ref<number | null>(null)
 const fairnessData = ref<ScheduleFairnessResponse | null>(null)
+const workloadData = ref<WorkloadMetricsResponse | null>(null)
+
+const startDate = ref<string>('')
+const endDate = ref<string>('')
 
 const isLoadingSchedules = ref<boolean>(false)
 const isLoadingFairness = ref<boolean>(false)
+const isLoadingWorkload = ref<boolean>(false)
 const errorMessage = ref<string>('')
 
 const selectedSchedule = computed<Schedule | undefined>(() =>
@@ -309,6 +415,31 @@ async function loadFairness(): Promise<void> {
     fairnessData.value = null
   } finally {
     isLoadingFairness.value = false
+  }
+}
+
+async function loadWorkload(): Promise<void> {
+  if (!startDate.value || !endDate.value) {
+    errorMessage.value = 'Please select both start and end dates.'
+    return
+  }
+
+  isLoadingWorkload.value = true
+  errorMessage.value = ''
+
+  try {
+    workloadData.value = await getWorkloadMetrics({
+      start_date: startDate.value,
+      end_date: endDate.value,
+    })
+  } catch (error: unknown) {
+    errorMessage.value = getBackendErrorMessage(
+      error,
+      'Unable to load workload metrics. Please check the dates and try again.',
+    )
+    workloadData.value = null
+  } finally {
+    isLoadingWorkload.value = false
   }
 }
 
