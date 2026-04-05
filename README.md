@@ -169,6 +169,85 @@ POST /planning/generate/{schedule_id}
 
 ---
 
+## 📊 Equity analysis (metrics)
+
+The application includes a dedicated module for analyzing workload distribution and fairness.
+
+### Structure
+
+The module is organized into two tabs:
+
+* **Fairness by schedule**
+* **Workload by date range**
+
+---
+
+### Fairness by schedule
+
+Analyzes how workload is distributed within a specific schedule.
+
+#### Features
+
+* Select schedule from dropdown  
+* Default selection: **latest created schedule**  
+* Automatic loading of fairness data  
+* Summary metrics:
+  * total assigned hours  
+  * max assigned hours  
+  * min assigned hours  
+  * hours gap  
+
+#### Visualization
+
+* Horizontal bars per employee  
+* Relative workload distribution  
+* Percentage and assigned hours  
+
+#### Insights
+
+* Detects whether planning is balanced  
+* Highlights:
+  * highest workload employee  
+  * lowest workload employee  
+
+---
+
+### Workload by date range
+
+Analyzes workload across a custom time period.
+
+#### Features
+
+* Select:
+  * start date  
+  * end date  
+* Default range: **current week (Monday to Sunday)**  
+* Manual trigger via “Load workload” button  
+
+#### Visualization
+
+* Summary:
+  * start date  
+  * end date  
+  * total assigned hours  
+* Per employee:
+  * assigned hours  
+  * workload percentage  
+  * horizontal distribution bars  
+
+---
+
+### Frontend behavior
+
+* Metrics are loaded via API calls:
+  * `GET /metrics/fairness/{schedule_id}`
+  * `GET /metrics/workload`
+* Errors are handled and displayed in the UI  
+* Loading states are managed for each dataset  
+* Tabs isolate contexts to improve usability  
+
+---
+
 ## 🧠 Application behavior
 
 The frontend enforces business rules defined by the backend:
