@@ -1,11 +1,11 @@
 <template>
-  <div class="min-h-screen bg-slate-50 lg:grid lg:grid-cols-[256px_1fr]">
+  <div class="h-screen bg-slate-50 lg:grid lg:grid-cols-[256px_1fr]">
     <AppSidebar />
 
-    <div class="min-h-screen">
+    <div class="flex h-screen flex-col overflow-hidden">
       <AppTopbar :title="title" :subtitle="subtitle" />
 
-      <main class="p-8">
+      <main class="flex-1 overflow-y-auto p-8">
         <slot />
       </main>
     </div>
