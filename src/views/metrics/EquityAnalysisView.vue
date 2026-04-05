@@ -1,51 +1,35 @@
 <template>
   <AppShell
     title="Equity analysis"
-    subtitle="Analyze workload fairness for a selected schedule."
+    subtitle="Analyze fairness by schedule and workload across custom date ranges."
   >
     <section class="space-y-6">
-      <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div class="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
-          <div class="grid gap-4 md:grid-cols-2">
-            <div>
-              <label
-                for="schedule-id"
-                class="mb-2 block text-sm font-medium text-slate-700"
-              >
-                Schedule
-              </label>
-              <select
-                id="schedule-id"
-                v-model.number="selectedScheduleId"
-                class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-600"
-                :disabled="isLoadingSchedules || isLoadingFairness"
-              >
-                <option value="">Select a schedule</option>
-                <option
-                  v-for="schedule in schedules"
-                  :key="schedule.id"
-                  :value="schedule.id"
-                >
-                  #{{ schedule.id }} · {{ formatDate(schedule.start_date) }} - {{ formatDate(schedule.end_date) }}
-                </option>
-              </select>
-            </div>
-
-            <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <p class="text-sm text-slate-500">Selected period</p>
-              <p class="mt-2 font-medium text-slate-900">
-                {{ selectedScheduleLabel }}
-              </p>
-            </div>
-          </div>
+      <section class="rounded-3xl border border-slate-200 bg-white p-2 shadow-sm">
+        <div class="inline-flex rounded-2xl border border-slate-200 bg-slate-100 p-1">
+          <button
+            type="button"
+            class="rounded-xl px-4 py-2 text-sm font-medium transition"
+            :class="
+              activeTab === 'fairness'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-500 hover:text-slate-700'
+            "
+            @click="activeTab = 'fairness'"
+          >
+            Fairness
+          </button>
 
           <button
             type="button"
-            class="rounded-xl bg-blue-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-70"
-            :disabled="isLoadingFairness || !selectedScheduleId"
-            @click="loadFairness"
+            class="rounded-xl px-4 py-2 text-sm font-medium transition"
+            :class="
+              activeTab === 'workload'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-500 hover:text-slate-700'
+            "
+            @click="activeTab = 'workload'"
           >
-            {{ isLoadingFairness ? 'Loading...' : 'Load fairness' }}
+            Workload
           </button>
         </div>
       </section>
@@ -57,39 +41,222 @@
         {{ errorMessage }}
       </section>
 
-      <section
-        v-if="isLoadingSchedules"
-        class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
-      >
-        <p class="text-sm text-slate-500">Loading schedules...</p>
-      </section>
+      <template v-if="activeTab === 'fairness'">
+        <section class="space-y-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div class="flex flex-wrap items-center gap-3">
+              <div>
+                <h2 class="text-xl font-semibold text-slate-900">Fairness by schedule</h2>
+                <p class="text-sm text-slate-500">
+                  Compare assigned hours within a selected schedule.
+                </p>
+              </div>
+            </div>
 
-      <template v-if="fairnessData">
-        <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <article
-            v-for="card in summaryCards"
-            :key="card.label"
-            class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
+            <div class="flex items-center gap-3">
+              <select
+                v-model.number="selectedScheduleId"
+                class="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-blue-600"
+                :disabled="isLoadingSchedules || isLoadingFairness"
+                @change="handleScheduleChange"
+              >
+                <option
+                  v-for="schedule in sortedSchedules"
+                  :key="schedule.id"
+                  :value="schedule.id"
+                >
+                  #{{ schedule.id }} · {{ formatDate(schedule.start_date) }} - {{ formatDate(schedule.end_date) }}
+                </option>
+              </select>
+
+              <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
+                <span class="text-slate-500">Period:</span>
+                <span class="ml-1 font-medium text-slate-900">
+                  {{ selectedScheduleLabel }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div
+            v-if="isLoadingSchedules"
+            class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500"
           >
-            <p class="text-sm text-slate-500">{{ card.label }}</p>
-            <p class="mt-3 text-3xl font-semibold text-slate-900">
-              {{ card.value }}
-            </p>
-          </article>
-        </section>
+            Loading schedules...
+          </div>
 
-        <section class="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
-          <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 class="text-xl font-semibold text-slate-900">Hours by employee</h2>
-            <p class="mt-1 text-sm text-slate-500">
-              Compare assigned hours and workload percentages across employees.
-            </p>
-
-            <div class="mt-6 space-y-4">
+          <template v-if="fairnessData">
+            <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               <article
-                v-for="employee in fairnessData.employees"
+                v-for="card in summaryCards"
+                :key="card.label"
+                class="rounded-3xl border border-slate-200 bg-slate-50 p-6"
+              >
+                <p class="text-sm text-slate-500">{{ card.label }}</p>
+                <p class="mt-3 text-3xl font-semibold text-slate-900">
+                  {{ card.value }}
+                </p>
+              </article>
+            </div>
+
+            <div class="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
+              <section class="rounded-3xl border border-slate-200 bg-slate-50 p-6">
+                <h3 class="text-lg font-semibold text-slate-900">Hours by employee</h3>
+                <p class="mt-1 text-sm text-slate-500">
+                  Relative workload distribution within the schedule.
+                </p>
+
+                <div class="mt-6 space-y-4">
+                  <article
+                    v-for="employee in fairnessData.employees"
+                    :key="employee.employee_id"
+                    class="grid grid-cols-[140px_1fr_72px] items-center gap-4"
+                  >
+                    <div>
+                      <p class="text-sm font-medium text-slate-900">
+                        {{ employee.employee_name }}
+                      </p>
+                      <p class="mt-1 text-xs text-slate-500">
+                        Max {{ employee.max_weekly_hours }}h
+                      </p>
+                    </div>
+
+                    <div class="h-4 overflow-hidden rounded-full bg-slate-200">
+                      <div
+                        class="h-full rounded-full bg-blue-600"
+                        :style="{ width: `${getFairnessBarWidth(employee.assigned_hours)}%` }"
+                      />
+                    </div>
+
+                    <div class="text-right">
+                      <p class="text-sm font-semibold text-slate-900">
+                        {{ employee.assigned_hours }}h
+                      </p>
+                      <p class="mt-1 text-xs text-slate-500">
+                        {{ employee.workload_percentage.toFixed(1) }}%
+                      </p>
+                    </div>
+                  </article>
+                </div>
+              </section>
+
+              <section class="rounded-3xl border border-slate-200 bg-slate-50 p-6">
+                <h3 class="text-lg font-semibold text-slate-900">Detected insights</h3>
+                <p class="mt-1 text-sm text-slate-500">
+                  Quick interpretation of the fairness distribution.
+                </p>
+
+                <div class="mt-6 space-y-3">
+                  <article
+                    v-for="insight in insights"
+                    :key="insight.title"
+                    class="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4"
+                  >
+                    <div>
+                      <p class="font-medium text-slate-900">{{ insight.title }}</p>
+                      <p class="mt-1 text-sm text-slate-500">{{ insight.description }}</p>
+                    </div>
+
+                    <span
+                      class="inline-flex rounded-full px-3 py-1 text-xs font-semibold"
+                      :class="insight.badgeClass"
+                    >
+                      {{ insight.badge }}
+                    </span>
+                  </article>
+                </div>
+              </section>
+            </div>
+          </template>
+        </section>
+      </template>
+
+      <template v-else>
+        <section class="space-y-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+            <div>
+              <h2 class="text-xl font-semibold text-slate-900">Workload by date range</h2>
+              <p class="mt-1 text-sm text-slate-500">
+                Analyze assigned workload across a custom time period.
+              </p>
+            </div>
+
+            <div class="grid gap-3 sm:grid-cols-2 xl:flex xl:items-end">
+              <div>
+                <label
+                  for="start-date"
+                  class="mb-2 block text-sm font-medium text-slate-700"
+                >
+                  Start date
+                </label>
+                <input
+                  id="start-date"
+                  v-model="startDate"
+                  type="date"
+                  class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-600 xl:w-[180px]"
+                  :disabled="isLoadingWorkload"
+                />
+              </div>
+
+              <div>
+                <label
+                  for="end-date"
+                  class="mb-2 block text-sm font-medium text-slate-700"
+                >
+                  End date
+                </label>
+                <input
+                  id="end-date"
+                  v-model="endDate"
+                  type="date"
+                  class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-600 xl:w-[180px]"
+                  :disabled="isLoadingWorkload"
+                />
+              </div>
+
+              <button
+                type="button"
+                class="rounded-xl bg-blue-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-70 xl:mb-0"
+                :disabled="isLoadingWorkload"
+                @click="loadWorkload"
+              >
+                {{ isLoadingWorkload ? 'Loading...' : 'Load workload' }}
+              </button>
+            </div>
+          </div>
+
+          <section
+            v-if="workloadData"
+            class="space-y-6 rounded-3xl border border-slate-200 bg-slate-50 p-6"
+          >
+            <div class="grid gap-4 md:grid-cols-3">
+              <article class="rounded-2xl border border-slate-200 bg-white p-4">
+                <p class="text-sm text-slate-500">Start date</p>
+                <p class="mt-2 text-2xl font-semibold text-slate-900">
+                  {{ formatDate(workloadData.start_date) }}
+                </p>
+              </article>
+
+              <article class="rounded-2xl border border-slate-200 bg-white p-4">
+                <p class="text-sm text-slate-500">End date</p>
+                <p class="mt-2 text-2xl font-semibold text-slate-900">
+                  {{ formatDate(workloadData.end_date) }}
+                </p>
+              </article>
+
+              <article class="rounded-2xl border border-slate-200 bg-white p-4">
+                <p class="text-sm text-slate-500">Total assigned hours</p>
+                <p class="mt-2 text-2xl font-semibold text-slate-900">
+                  {{ workloadData.total_assigned_hours }}h
+                </p>
+              </article>
+            </div>
+
+            <div class="space-y-4">
+              <article
+                v-for="employee in workloadData.employees"
                 :key="employee.employee_id"
-                class="grid grid-cols-[140px_1fr_72px] items-center gap-4"
+                class="grid grid-cols-[140px_1fr_72px] items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4"
               >
                 <div>
                   <p class="text-sm font-medium text-slate-900">
@@ -100,10 +267,10 @@
                   </p>
                 </div>
 
-                <div class="h-4 overflow-hidden rounded-full bg-slate-100">
+                <div class="h-4 overflow-hidden rounded-full bg-slate-200">
                   <div
                     class="h-full rounded-full bg-blue-600"
-                    :style="{ width: `${getBarWidth(employee.assigned_hours)}%` }"
+                    :style="{ width: `${getWorkloadBarWidth(employee.workload_percentage)}%` }"
                   />
                 </div>
 
@@ -118,133 +285,8 @@
               </article>
             </div>
           </section>
-
-          <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 class="text-xl font-semibold text-slate-900">Detected insights</h2>
-            <p class="mt-1 text-sm text-slate-500">
-              Quick interpretation of the fairness distribution.
-            </p>
-
-            <div class="mt-6 space-y-3">
-              <article
-                v-for="insight in insights"
-                :key="insight.title"
-                class="flex items-center justify-between rounded-2xl border border-slate-200 p-4"
-              >
-                <div>
-                  <p class="font-medium text-slate-900">{{ insight.title }}</p>
-                  <p class="mt-1 text-sm text-slate-500">{{ insight.description }}</p>
-                </div>
-
-                <span
-                  class="inline-flex rounded-full px-3 py-1 text-xs font-semibold"
-                  :class="insight.badgeClass"
-                >
-                  {{ insight.badge }}
-                </span>
-              </article>
-            </div>
-          </section>
         </section>
       </template>
-      <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div class="mb-6">
-          <h2 class="text-xl font-semibold text-slate-900">Workload analysis</h2>
-          <p class="mt-1 text-sm text-slate-500">
-            Analyze assigned workload across a custom date range.
-          </p>
-        </div>
-
-        <div class="grid gap-4 lg:grid-cols-[1fr_1fr_auto] lg:items-end">
-          <div>
-            <label
-              for="start-date"
-              class="mb-2 block text-sm font-medium text-slate-700"
-            >
-              Start date
-            </label>
-            <input
-              id="start-date"
-              v-model="startDate"
-              type="date"
-              class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-600"
-              :disabled="isLoadingWorkload"
-            />
-          </div>
-
-          <div>
-            <label
-              for="end-date"
-              class="mb-2 block text-sm font-medium text-slate-700"
-            >
-              End date
-            </label>
-            <input
-              id="end-date"
-              v-model="endDate"
-              type="date"
-              class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-600"
-              :disabled="isLoadingWorkload"
-            />
-          </div>
-
-          <button
-            type="button"
-            class="rounded-xl bg-blue-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-70"
-            :disabled="isLoadingWorkload"
-            @click="loadWorkload"
-          >
-            {{ isLoadingWorkload ? 'Loading...' : 'Load workload' }}
-          </button>
-        </div>
-      </section>
-
-      <section
-        v-if="workloadData"
-        class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
-      >
-        <div class="mb-6 flex items-start justify-between gap-4">
-          <div>
-            <h2 class="text-xl font-semibold text-slate-900">Workload results</h2>
-            <p class="mt-1 text-sm text-slate-500">
-              {{ formatDate(workloadData.start_date) }} - {{ formatDate(workloadData.end_date) }}
-            </p>
-          </div>
-
-          <div class="text-right">
-            <p class="text-sm text-slate-500">Total assigned hours</p>
-            <p class="mt-1 text-2xl font-semibold text-slate-900">
-              {{ workloadData.total_assigned_hours }}h
-            </p>
-          </div>
-        </div>
-
-        <div class="space-y-3">
-          <article
-            v-for="employee in workloadData.employees"
-            :key="employee.employee_id"
-            class="flex items-center justify-between rounded-2xl border border-slate-200 p-4"
-          >
-            <div>
-              <p class="font-medium text-slate-900">
-                {{ employee.employee_name }}
-              </p>
-              <p class="mt-1 text-sm text-slate-500">
-                Max weekly hours: {{ employee.max_weekly_hours }}h
-              </p>
-            </div>
-
-            <div class="text-right">
-              <p class="font-semibold text-slate-900">
-                {{ employee.assigned_hours }}h
-              </p>
-              <p class="mt-1 text-sm text-slate-500">
-                {{ employee.workload_percentage.toFixed(1) }}%
-              </p>
-            </div>
-          </article>
-        </div>
-      </section>
     </section>
   </AppShell>
 </template>
@@ -274,21 +316,34 @@ interface InsightItem {
   badgeClass: string
 }
 
+type MetricsTab = 'fairness' | 'workload'
+
+const activeTab = ref<MetricsTab>('fairness')
+
 const schedules = ref<Schedule[]>([])
 const selectedScheduleId = ref<number | null>(null)
 const fairnessData = ref<ScheduleFairnessResponse | null>(null)
 const workloadData = ref<WorkloadMetricsResponse | null>(null)
 
-const startDate = ref<string>('')
-const endDate = ref<string>('')
+const currentWeekRange = getCurrentWeekRange()
+
+const startDate = ref<string>(currentWeekRange.start)
+const endDate = ref<string>(currentWeekRange.end)
 
 const isLoadingSchedules = ref<boolean>(false)
 const isLoadingFairness = ref<boolean>(false)
 const isLoadingWorkload = ref<boolean>(false)
 const errorMessage = ref<string>('')
 
+const sortedSchedules = computed<Schedule[]>(() =>
+  [...schedules.value].sort(
+    (firstSchedule, secondSchedule) =>
+      dayjs(secondSchedule.created_at).valueOf() - dayjs(firstSchedule.created_at).valueOf(),
+  ),
+)
+
 const selectedSchedule = computed<Schedule | undefined>(() =>
-  schedules.value.find((schedule) => schedule.id === selectedScheduleId.value),
+  sortedSchedules.value.find((schedule) => schedule.id === selectedScheduleId.value),
 )
 
 const selectedScheduleLabel = computed<string>(() => {
@@ -331,10 +386,12 @@ const insights = computed<InsightItem[]>(() => {
 
   const employees = fairnessData.value.employees
   const highest = [...employees].sort(
-    (firstEmployee, secondEmployee) => secondEmployee.assigned_hours - firstEmployee.assigned_hours,
+    (firstEmployee, secondEmployee) =>
+      secondEmployee.assigned_hours - firstEmployee.assigned_hours,
   )[0]
   const lowest = [...employees].sort(
-    (firstEmployee, secondEmployee) => firstEmployee.assigned_hours - secondEmployee.assigned_hours,
+    (firstEmployee, secondEmployee) =>
+      firstEmployee.assigned_hours - secondEmployee.assigned_hours,
   )[0]
 
   const isBalanced = fairnessData.value.hours_gap <= 4
@@ -369,12 +426,30 @@ function formatDate(value: string): string {
   return dayjs(value).format('DD/MM/YYYY')
 }
 
-function getBarWidth(assignedHours: number): number {
+function getCurrentWeekRange(): { start: string; end: string } {
+  const today = dayjs()
+  const dayOfWeek = today.day()
+
+  const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1
+  const monday = today.subtract(daysFromMonday, 'day')
+  const sunday = monday.add(6, 'day')
+
+  return {
+    start: monday.format('YYYY-MM-DD'),
+    end: sunday.format('YYYY-MM-DD'),
+  }
+}
+
+function getFairnessBarWidth(assignedHours: number): number {
   if (!fairnessData.value || fairnessData.value.max_assigned_hours === 0) {
     return 0
   }
 
   return (assignedHours / fairnessData.value.max_assigned_hours) * 100
+}
+
+function getWorkloadBarWidth(workloadPercentage: number): number {
+  return Math.max(0, Math.min(workloadPercentage, 100))
 }
 
 async function loadSchedules(): Promise<void> {
@@ -384,8 +459,8 @@ async function loadSchedules(): Promise<void> {
   try {
     schedules.value = await getSchedules()
 
-    if (schedules.value.length > 0 && selectedScheduleId.value === null) {
-      selectedScheduleId.value = schedules.value[0].id
+    if (sortedSchedules.value.length > 0 && selectedScheduleId.value === null) {
+      selectedScheduleId.value = sortedSchedules.value[0].id
     }
   } catch (error: unknown) {
     errorMessage.value = getBackendErrorMessage(
@@ -418,6 +493,15 @@ async function loadFairness(): Promise<void> {
   }
 }
 
+async function handleScheduleChange(): Promise<void> {
+  if (!selectedScheduleId.value) {
+    fairnessData.value = null
+    return
+  }
+
+  await loadFairness()
+}
+
 async function loadWorkload(): Promise<void> {
   if (!startDate.value || !endDate.value) {
     errorMessage.value = 'Please select both start and end dates.'
@@ -435,7 +519,7 @@ async function loadWorkload(): Promise<void> {
   } catch (error: unknown) {
     errorMessage.value = getBackendErrorMessage(
       error,
-      'Unable to load workload metrics. Please check the dates and try again.',
+      'Unable to load workload metrics. Please try again.',
     )
     workloadData.value = null
   } finally {
@@ -449,5 +533,7 @@ onMounted(async () => {
   if (selectedScheduleId.value) {
     await loadFairness()
   }
+
+  await loadWorkload()
 })
 </script>
