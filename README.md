@@ -126,6 +126,69 @@ Employee creation is handled through a **single onboarding operation**.
 
 ---
 
+## ⏱️ Shift management
+
+The application includes a module for managing shifts associated with schedules.
+
+### Features
+
+* View list of shifts  
+* Create new shifts  
+* Edit existing shifts  
+* Delete shifts  
+
+---
+
+### Shift list
+
+* Displays all shifts in a table format  
+* Columns include:
+  * date  
+  * start time  
+  * end time  
+  * schedule ID  
+  * creation type  
+  * status  
+* Provides actions:
+  * edit shift  
+  * delete shift  
+
+---
+
+### Create and edit shifts
+
+* Unified form for both creation and edition  
+* Fields:
+  * date  
+  * start time  
+  * end time  
+  * schedule  
+  * creation type (`manual` / `automatic`)  
+  * status (`planned`, `assigned`, `pending`)  
+
+### Validation
+
+* Ensures that:
+  * end time is strictly greater than start time  
+* Prevents submission of invalid time ranges  
+* Displays validation errors directly in the UI  
+
+---
+
+### Frontend behavior
+
+* Data is retrieved and managed through API calls:
+  * `GET /shifts/`
+  * `GET /shifts/{id}`
+  * `POST /shifts/`
+  * `PUT /shifts/{id}`
+  * `DELETE /shifts/{id}`
+* Loading states are handled for list and form views  
+* Errors are captured and displayed using centralized error handling utilities  
+* After create/update/delete actions, the UI is updated accordingly  
+
+---
+
 ## 📅 Schedule management
 
 The application allows administrators to manage schedules and generate planning automatically.
