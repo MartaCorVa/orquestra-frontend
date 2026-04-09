@@ -15,6 +15,8 @@ const DashboardView = () => import('../views/dashboard/DashboardView.vue')
 const EmployeeEditView = () => import('../views/employees/EmployeeEditView.vue')
 const EmployeesListView = () => import('../views/employees/EmployeesListView.vue')
 const EmployeeOnboardingView = () => import('../views/employees/EmployeeOnboardingView.vue')
+const ShiftCreateView = () => import('../views/shifts/ShiftCreateView.vue')
+const ShiftEditView = () => import('../views/shifts/ShiftEditView.vue')
 const ShiftsListView = () => import('../views/shifts/ShiftsListView.vue')
 const ScheduleCreateView = () => import('../views/schedules/ScheduleCreateView.vue')
 const ScheduleDetailView = () => import('../views/schedules/ScheduleDetailView.vue')
@@ -88,6 +90,24 @@ const routes: RouteRecordRaw[] = [
     meta: {
       requiresAuth: true,
       title: 'Shifts',
+    },
+  },
+  {
+    path: '/shifts/new',
+    name: 'shift-create',
+    component: ShiftCreateView,
+    meta: {
+      requiresAuth: true,
+      title: 'Create Shift',
+    },
+  },
+  {
+    path: '/shifts/:id/edit',
+    name: 'shift-edit',
+    component: ShiftEditView,
+    meta: {
+      requiresAuth: true,
+      title: 'Edit Shift',
     },
   },
   {
