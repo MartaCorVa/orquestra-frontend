@@ -7,6 +7,7 @@ import {
 import {
   getAccessToken,
   getMustChangePassword,
+  getRole,
 } from '../utils/storage'
 
 const LoginView = () => import('../views/auth/LoginView.vue')
@@ -23,6 +24,7 @@ const ScheduleDetailView = () => import('../views/schedules/ScheduleDetailView.v
 const SchedulesListView = () => import('../views/schedules/SchedulesListView.vue')
 const MetricsView = () => import('../views/metrics/EquityAnalysisView.vue')
 const NotFoundView = () => import('../views/errors/NotFoundView.vue')
+const UnauthorizedView = () => import('../views/errors/UnauthorizedView.vue')
 
 const routes: RouteRecordRaw[] = [
   {
@@ -63,6 +65,7 @@ const routes: RouteRecordRaw[] = [
     meta: {
       requiresAuth: true,
       title: 'Employees',
+      roles: ['admin'],
     },
   },
   {
@@ -72,6 +75,7 @@ const routes: RouteRecordRaw[] = [
     meta: {
       requiresAuth: true,
       title: 'Create Employee',
+      roles: ['admin'],
     },
   },
   {
@@ -81,6 +85,7 @@ const routes: RouteRecordRaw[] = [
     meta: {
       requiresAuth: true,
       title: 'Edit Employee',
+      roles: ['admin'],
     },
   },
   {
@@ -99,6 +104,7 @@ const routes: RouteRecordRaw[] = [
     meta: {
       requiresAuth: true,
       title: 'Create Shift',
+      roles: ['admin'],
     },
   },
   {
@@ -108,6 +114,7 @@ const routes: RouteRecordRaw[] = [
     meta: {
       requiresAuth: true,
       title: 'Edit Shift',
+      roles: ['admin'],
     },
   },
   {
@@ -126,6 +133,7 @@ const routes: RouteRecordRaw[] = [
     meta: {
       requiresAuth: true,
       title: 'Create Schedule',
+      roles: ['admin'],
     },
   },
   {
@@ -144,6 +152,7 @@ const routes: RouteRecordRaw[] = [
     meta: {
       requiresAuth: true,
       title: 'Equity analysis',
+      roles: ['admin'],
     },
   },
   {
@@ -153,6 +162,15 @@ const routes: RouteRecordRaw[] = [
     meta: {
       public: true,
       title: 'Not Found',
+    },
+  },
+  {
+    path: '/unauthorized',
+    name: 'unauthorized',
+    component: UnauthorizedView,
+    meta: {
+      requiresAuth: true,
+      title: 'Unauthorized',
     },
   },
 ]
@@ -165,10 +183,14 @@ const router = createRouter({
 router.beforeEach((to) => {
   const token = getAccessToken()
   const mustChangePassword = getMustChangePassword()
+  const role = getRole()
+
   const isAuthenticated = Boolean(token)
   const requiresAuth = to.meta.requiresAuth === true
+  const isPublicRoute = to.meta.public === true
   const isLoginRoute = to.name === 'login'
   const isChangePasswordRoute = to.name === 'change-password'
+  const allowedRoles = to.meta.roles as string[] | undefined
 
   if (!isAuthenticated && requiresAuth) {
     return { name: 'login' }
@@ -186,6 +208,19 @@ router.beforeEach((to) => {
 
   if (isAuthenticated && !mustChangePassword && isChangePasswordRoute) {
     return { name: 'dashboard' }
+  }
+
+  if (
+    isAuthenticated &&
+    !mustChangePassword &&
+    allowedRoles &&
+    !allowedRoles.includes(role)
+  ) {
+    return { name: 'unauthorized' }
+  }
+
+  if (!isAuthenticated && !isPublicRoute && !requiresAuth) {
+    return { name: 'login' }
   }
 
   return true

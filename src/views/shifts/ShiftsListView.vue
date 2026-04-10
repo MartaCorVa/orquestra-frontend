@@ -13,6 +13,7 @@
         </div>
 
         <RouterLink
+          v-if="isAdmin"
           to="/shifts/new"
           class="rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-800"
         >
@@ -45,7 +46,7 @@
                 <th class="px-6 py-4 font-semibold">Schedule</th>
                 <th class="px-6 py-4 font-semibold">Type</th>
                 <th class="px-6 py-4 font-semibold">Status</th>
-                <th class="px-6 py-4 font-semibold">Actions</th>
+                <th v-if="isAdmin" class="px-6 py-4 font-semibold">Actions</th>
               </tr>
             </thead>
 
@@ -81,7 +82,10 @@
                   </span>
                 </td>
 
-                <td class="px-6 py-4">
+                <td 
+                  v-if="isAdmin"
+                  class="px-6 py-4"
+                >
                   <div class="flex gap-2">
                     <RouterLink
                       :to="`/shifts/${shift.id}/edit`"
@@ -117,19 +121,26 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import dayjs from 'dayjs'
 
 import AppShell from '../../components/layout/AppShell.vue'
 import { deleteShift, getShifts, type Shift } from '../../api/shifts'
 import { getBackendErrorMessage } from '../../utils/api'
+import { useAuthStore } from '../../stores/auth'
+import { storeToRefs } from 'pinia'
 
 const shifts = ref<Shift[]>([])
 const isLoading = ref<boolean>(false)
 const hasError = ref<boolean>(false)
 const deletingShiftId = ref<number | null>(null)
 const tableErrorMessage = ref<string>('')
+
+const authStore = useAuthStore()
+const { userRole } = storeToRefs(authStore)
+
+const isAdmin = computed(() => userRole.value === 'admin')
 
 function formatDate(value: string): string {
   return dayjs(value).format('DD/MM/YYYY')

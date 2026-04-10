@@ -90,6 +90,11 @@ The application uses JWT-based authentication and supports a **first-login passw
   * access to the rest of the application is blocked  
 * If `false`:
   * the user is redirected to the dashboard  
+* The role is stored in local storage  
+* The UI adapts based on the user role:
+  * Sidebar navigation is filtered  
+  * Routes are protected  
+  * Admin-only actions are hidden for employees  
 
 ### Change password (first login)
 
@@ -98,6 +103,39 @@ The application uses JWT-based authentication and supports a **first-login passw
 * After success:
   * `must_change_password` is set to false  
   * the user is redirected to the dashboard  
+
+---
+
+## 👁️ Visibility rules
+
+The frontend enforces role-based visibility:
+
+### Admin
+
+* Full navigation:
+  * Dashboard
+  * Employees
+  * Shifts
+  * Schedules
+  * Equity analysis
+
+### Employee
+
+* Limited navigation:
+  * Dashboard
+  * Shifts (only assigned)
+  * Schedules (only relevant ones)
+
+---
+
+### UI restrictions
+
+* Admin-only actions are hidden:
+  * create/edit/delete entities  
+  * planning generation  
+  * employee management  
+
+* Employees can only view their own planning context  
 
 ---
 
@@ -205,6 +243,14 @@ The application allows administrators to manage schedules and generate planning 
 * Displays all shifts associated with the schedule
 * Shows assignments grouped by date
 * Provides a weekly overview of planning
+
+### Access control
+
+* **Admin**
+  * Can access any schedule  
+* **Employee**
+  * Can only access schedules where they have assigned shifts  
+  * Otherwise receives a `403 Forbidden`  
 
 ---
 
@@ -321,6 +367,7 @@ The frontend enforces business rules defined by the backend:
   * are forced to complete the password change  
 * Authentication state is persisted using local storage  
 * Backend validation errors are displayed directly in the UI  
+* Role-based access is enforced in the frontend
 
 ---
 

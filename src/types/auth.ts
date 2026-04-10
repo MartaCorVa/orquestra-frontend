@@ -7,6 +7,8 @@ export interface LoginResponse {
   access_token: string
   token_type: string
   must_change_password: boolean
+  role: string
+  user: string
 }
 
 export interface ChangePasswordPayload {
