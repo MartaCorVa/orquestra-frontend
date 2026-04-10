@@ -14,6 +14,7 @@
 
         <div class="flex gap-3">
           <RouterLink
+            v-if="isAdmin"
             to="/schedules/new"
             class="rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-800"
           >
@@ -83,6 +84,7 @@
                     </RouterLink>
 
                     <button
+                      v-if="isAdmin"
                       type="button"
                       class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
                       :disabled="generatingScheduleId === schedule.id"
@@ -120,7 +122,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import dayjs from 'dayjs'
 
@@ -131,6 +133,8 @@ import {
   type Schedule,
 } from '../../api/schedules'
 import { getBackendErrorMessage } from '../../utils/api'
+import { useAuthStore } from '../../stores/auth'
+import { storeToRefs } from 'pinia'
 
 const schedules = ref<Schedule[]>([])
 const isLoading = ref<boolean>(false)
@@ -138,6 +142,11 @@ const hasError = ref<boolean>(false)
 const generatingScheduleId = ref<number | null>(null)
 const tableMessage = ref<string>('')
 const tableErrorMessage = ref<string>('')
+
+const authStore = useAuthStore()
+const { userRole } = storeToRefs(authStore)
+
+const isAdmin = computed(() => userRole.value === 'admin')
 
 function formatDate(value: string): string {
   return dayjs(value).format('DD/MM/YYYY')

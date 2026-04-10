@@ -44,28 +44,28 @@
                   {{ formatTime(shift.start_time) }} - {{ formatTime(shift.end_time) }}
                 </p>
                 <p class="mt-1 text-xs text-slate-500">
-                  {{ shift.creation_type }} · {{ shift.status }}
+                  {{ shift.status }}
                 </p>
               </div>
 
               <span
                 class="inline-flex rounded-full bg-blue-100 px-2.5 py-1 text-[11px] font-semibold text-blue-700"
               >
-                {{ shiftAssignmentsMap[shift.id]?.length ?? 0 }} assigned
+                {{ shift.assignments.length }} assigned
               </span>
             </div>
 
             <div class="mt-3 space-y-2">
               <div
-                v-for="assignment in shiftAssignmentsMap[shift.id] ?? []"
+                v-for="assignment in shift.assignments"
                 :key="assignment.id"
                 class="rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-700"
               >
-                {{ getEmployeeName(assignment.employee_id) }}
+                {{ assignment.employee.first_name}} {{ assignment.employee.last_name }}
               </div>
 
               <div
-                v-if="(shiftAssignmentsMap[shift.id]?.length ?? 0) === 0"
+                v-if="shift.assignments.length === 0"
                 class="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-700"
               >
                 No employees assigned
@@ -82,27 +82,23 @@
 import { computed } from 'vue'
 import dayjs from 'dayjs'
 
-import type { Assignment } from '../../api/assignments'
-import type { Employee } from '../../api/employees'
-import type { Shift } from '../../api/shifts'
+import type { ScheduleDetail, ScheduleDetailShift } from '../../api/schedules'
 
 interface Props {
-  shifts: Shift[]
-  assignments: Assignment[]
-  employees: Employee[]
+  schedule: ScheduleDetail
+}
+
+interface DayGroup {
+  date: string
+  shifts: ScheduleDetailShift[]
 }
 
 const props = defineProps<Props>()
 
-interface DayGroup {
-  date: string
-  shifts: Shift[]
-}
-
 const days = computed<DayGroup[]>(() => {
-  const grouped = new Map<string, Shift[]>()
+  const grouped = new Map<string, ScheduleDetailShift[]>()
 
-  const sortedShifts = [...props.shifts].sort((firstShift, secondShift) => {
+  const sortedShifts = [...props.schedule.shifts].sort((firstShift, secondShift) => {
     const firstDateTime = `${firstShift.date}T${firstShift.start_time}`
     const secondDateTime = `${secondShift.date}T${secondShift.start_time}`
 
@@ -121,20 +117,6 @@ const days = computed<DayGroup[]>(() => {
   }))
 })
 
-const shiftAssignmentsMap = computed<Record<number, Assignment[]>>(() => {
-  const result: Record<number, Assignment[]> = {}
-
-  for (const assignment of props.assignments) {
-    if (!result[assignment.shift_id]) {
-      result[assignment.shift_id] = []
-    }
-
-    result[assignment.shift_id].push(assignment)
-  }
-
-  return result
-})
-
 function formatDayLabel(value: string): string {
   return dayjs(value).format('ddd')
 }
@@ -145,15 +127,5 @@ function formatFullDate(value: string): string {
 
 function formatTime(value: string): string {
   return dayjs(`2000-01-01T${value}`).format('HH:mm')
-}
-
-function getEmployeeName(employeeId: number): string {
-  const employee = props.employees.find((currentEmployee) => currentEmployee.id === employeeId)
-
-  if (!employee) {
-    return `Employee #${employeeId}`
-  }
-
-  return `${employee.first_name} ${employee.last_name}`
 }
 </script>

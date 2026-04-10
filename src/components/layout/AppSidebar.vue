@@ -3,7 +3,7 @@
     <div class="border-b border-white/10 px-3 pb-4">
       <p class="text-xl font-semibold text-white">Orquestra</p>
       <p class="mt-1 text-sm text-slate-400">
-        Employee panel
+        {{ panelLabel }}
       </p>
     </div>
 
@@ -20,11 +20,32 @@
         {{ item.label }}
       </RouterLink>
     </nav>
+
+    <div class="border-t border-white/10 px-3 pt-4">
+      <div v-if="userEmail" class="mb-4">
+        <p class="text-sm font-medium text-white break-all">
+          {{ userEmail }}
+        </p>
+        <p class="text-xs text-slate-400 capitalize">
+          {{ userRole }}
+        </p>
+      </div>
+
+      <button
+        @click="handleLogout"
+        class="w-full rounded-xl bg-red-500/10 px-3 py-2 text-sm font-medium text-red-400 transition hover:bg-red-500/20 hover:text-white"
+      >
+        Logout
+      </button>
+    </div>
   </aside>
 </template>
 
 <script setup lang="ts">
-import { RouterLink, useRoute } from 'vue-router'
+import { computed } from 'vue'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { storeToRefs } from 'pinia'
+import { useAuthStore } from '../../stores/auth'
 
 interface NavigationItem {
   label: string
@@ -32,12 +53,34 @@ interface NavigationItem {
 }
 
 const route = useRoute()
+const router = useRouter()
+const authStore = useAuthStore()
 
-const items: NavigationItem[] = [
-  { label: 'Dashboard', to: '/dashboard' },
-  { label: 'Employees', to: '/employees' },
-  { label: 'Shifts', to: '/shifts' },
-  { label: 'Schedules', to: '/schedules' },
-  { label: 'Equity analysis', to: '/metrics' },
-]
+const { userRole, userEmail } = storeToRefs(authStore)
+
+const isAdmin = computed(() => userRole.value === 'admin')
+
+const panelLabel = computed(() =>
+  isAdmin.value ? 'Admin panel' : 'Employee panel'
+)
+
+const items = computed<NavigationItem[]>(() => {
+  const baseItems: NavigationItem[] = [
+    { label: 'Dashboard', to: '/dashboard' },
+    { label: 'Shifts', to: '/shifts' },
+    { label: 'Schedules', to: '/schedules' },
+  ]
+
+  if (isAdmin.value) {
+    baseItems.splice(1, 0, { label: 'Employees', to: '/employees' })
+    baseItems.push({ label: 'Equity analysis', to: '/metrics' })
+  }
+
+  return baseItems
+})
+
+const handleLogout = () => {
+  authStore.logout()
+  router.push({ name: 'login' })
+}
 </script>

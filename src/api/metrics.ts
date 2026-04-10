@@ -1,4 +1,8 @@
 import apiClient from './axios'
+import type { 
+  SummaryMetrics,
+  RecentSchedule
+ } from '../types/dashboard';
 import type {
   ScheduleFairnessResponse,
   WorkloadMetricsResponse,
@@ -19,5 +23,15 @@ export async function getWorkloadMetrics(
   }
 ): Promise<WorkloadMetricsResponse> {
   const response = await apiClient.get('/metrics/workload', { params })
+  return response.data
+}
+
+export async function getSummaryMetrics(): Promise<SummaryMetrics> {
+  const response = await apiClient.get('/metrics/summary')
+  return response.data
+}
+
+export const getRecentSchedule = async (): Promise<RecentSchedule | null> => {
+  const response = await apiClient.get('/metrics/recent-schedule')
   return response.data
 }

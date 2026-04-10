@@ -24,13 +24,41 @@ export interface GeneratePlanningPayload {
   employees_per_shift?: number
 }
 
+export interface ScheduleDetailEmployee {
+  id: number
+  first_name: string
+  last_name: string
+}
+
+export interface ScheduleDetailAssignment {
+  id: number
+  employee: ScheduleDetailEmployee
+}
+
+export interface ScheduleDetailShift {
+  id: number
+  date: string
+  start_time: string
+  end_time: string
+  status: string
+  assignments: ScheduleDetailAssignment[]
+}
+
+export interface ScheduleDetail {
+  id: number
+  start_date: string
+  end_date: string
+  status: string
+  shifts: ScheduleDetailShift[]
+}
+
 export async function getSchedules(): Promise<Schedule[]> {
   const response = await apiClient.get<Schedule[]>('/schedules/')
   return response.data
 }
 
-export async function getScheduleById(id: number): Promise<Schedule> {
-  const response = await apiClient.get<Schedule>(`/schedules/${id}`)
+export const getScheduleById = async (id: number): Promise<ScheduleDetail> => {
+  const response = await apiClient.get(`/schedules/${id}`)
   return response.data
 }
 

@@ -45,6 +45,7 @@ import {
   type UpdateEmployeePayload,
 } from '../../api/employees'
 import { getBackendErrorMessage } from '../../utils/api'
+import { useActivityStore } from '../../stores/activity'
 
 const route = useRoute()
 const router = useRouter()
@@ -61,6 +62,8 @@ const form = reactive<UpdateEmployeePayload>({
   max_weekly_hours: 40,
   active: true,
 })
+
+const activityStore = useActivityStore()
 
 async function loadEmployee(): Promise<void> {
   isLoading.value = true
@@ -96,6 +99,10 @@ async function handleSubmit(payload: UpdateEmployeePayload): Promise<void> {
       'Unable to update employee. Please review the form and try again.',
     )
   } finally {
+    activityStore.addActivity(
+      `${form.first_name} ${form.last_name}`,
+      'Employee updated'
+    )
     isSubmitting.value = false
   }
 }

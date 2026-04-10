@@ -21,6 +21,7 @@
           </RouterLink>
 
           <button
+            v-if="isAdmin"
             type="button"
             class="rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-70"
             :disabled="isGenerating"
@@ -70,11 +71,7 @@
           {{ errorMessage }}
         </p>
 
-        <ScheduleCalendarGrid
-          :shifts="scheduleShifts"
-          :assignments="scheduleAssignments"
-          :employees="employees"
-        />
+        <ScheduleCalendarGrid :schedule="schedule" />
       </template>
     </section>
   </AppShell>
@@ -83,14 +80,17 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
+import { storeToRefs } from 'pinia'
 import dayjs from 'dayjs'
 
 import AppShell from '../../components/layout/AppShell.vue'
 import ScheduleCalendarGrid from '../../components/schedules/ScheduleCalendarGrid.vue'
-import { getAssignments, type Assignment } from '../../api/assignments'
-import { getEmployees, type Employee } from '../../api/employees'
-import { getScheduleById, generatePlanning, type Schedule } from '../../api/schedules'
-import { getShifts, type Shift } from '../../api/shifts'
+import { useAuthStore } from '../../stores/auth'
+import {
+  generatePlanning,
+  getScheduleById,
+  type ScheduleDetail,
+} from '../../api/schedules'
 import { getBackendErrorMessage } from '../../utils/api'
 
 interface SummaryCard {
@@ -98,32 +98,21 @@ interface SummaryCard {
   value: string
 }
 
+const authStore = useAuthStore()
+const { userRole } = storeToRefs(authStore)
+
 const route = useRoute()
 
-const schedule = ref<Schedule | null>(null)
-const shifts = ref<Shift[]>([])
-const assignments = ref<Assignment[]>([])
-const employees = ref<Employee[]>([])
+const isAdmin = computed(() => userRole.value === 'admin')
+const scheduleId = computed<number>(() => Number(route.params.id))
+
+const schedule = ref<ScheduleDetail | null>(null)
 
 const isLoading = ref<boolean>(false)
 const hasError = ref<boolean>(false)
 const isGenerating = ref<boolean>(false)
 const message = ref<string>('')
 const errorMessage = ref<string>('')
-
-const scheduleId = computed<number>(() => Number(route.params.id))
-
-const scheduleShifts = computed<Shift[]>(() =>
-  shifts.value.filter((shift) => shift.schedule_id === scheduleId.value),
-)
-
-const scheduleShiftIds = computed<number[]>(() =>
-  scheduleShifts.value.map((shift) => shift.id),
-)
-
-const scheduleAssignments = computed<Assignment[]>(() =>
-  assignments.value.filter((assignment) => scheduleShiftIds.value.includes(assignment.shift_id)),
-)
 
 const summaryCards = computed<SummaryCard[]>(() => {
   if (!schedule.value) {
@@ -145,7 +134,7 @@ const summaryCards = computed<SummaryCard[]>(() => {
     },
     {
       label: 'Shifts',
-      value: String(scheduleShifts.value.length),
+      value: String(schedule.value.shifts.length),
     },
   ]
 })
@@ -161,17 +150,7 @@ async function loadScheduleDetail(): Promise<void> {
   message.value = ''
 
   try {
-    const [scheduleData, shiftsData, assignmentsData, employeesData] = await Promise.all([
-      getScheduleById(scheduleId.value),
-      getShifts(),
-      getAssignments(),
-      getEmployees(),
-    ])
-
-    schedule.value = scheduleData
-    shifts.value = shiftsData
-    assignments.value = assignmentsData
-    employees.value = employeesData
+    schedule.value = await getScheduleById(scheduleId.value)
   } catch {
     hasError.value = true
   } finally {
