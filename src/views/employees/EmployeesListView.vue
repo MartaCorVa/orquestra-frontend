@@ -22,6 +22,72 @@
         </div>
       </div>
 
+      <FiltersPanel>
+        <div class="flex flex-col gap-2">
+          <label for="employee-search" class="text-sm font-medium text-slate-700">
+            Search
+          </label>
+          <input
+            id="employee-search"
+            v-model="searchQuery"
+            type="text"
+            placeholder="Search by name..."
+            class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition focus:border-blue-500"
+          />
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label for="employee-status" class="text-sm font-medium text-slate-700">
+            Status
+          </label>
+          <select
+            id="employee-status"
+            v-model="statusFilter"
+            class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition focus:border-blue-500"
+          >
+            <option value="all">All</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label for="employee-weekly-hours" class="text-sm font-medium text-slate-700">
+            Weekly hours
+          </label>
+          <select
+            id="employee-weekly-hours"
+            v-model="weeklyHoursFilter"
+            class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition focus:border-blue-500"
+          >
+            <option value="">Any</option>
+            <option
+              v-for="hours in weeklyHoursOptions"
+              :key="hours"
+              :value="String(hours)"
+            >
+              {{ hours }}
+            </option>
+          </select>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label for="employee-sort" class="text-sm font-medium text-slate-700">
+            Sort by
+          </label>
+          <select
+            id="employee-sort"
+            v-model="sortBy"
+            class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition focus:border-blue-500"
+          >
+            <option value="name">Name</option>
+            <option value="status">Status</option>
+            <option value="weeklyHours">Weekly hours</option>
+            <option value="createdAt">Created</option>
+          </select>
+        </div>
+      </FiltersPanel>
+
       <section class="rounded-3xl border border-slate-200 bg-white shadow-sm">
         <div v-if="isLoading" class="p-6 text-sm text-slate-500">
           Loading employees...
@@ -49,7 +115,7 @@
           </div>
         </div>
 
-        <div v-else-if="employees.length === 0" class="p-6 text-sm text-slate-500">
+        <div v-else-if="filteredEmployees.length === 0" class="p-6 text-sm text-slate-500">
           No employees found.
         </div>
 
@@ -68,7 +134,7 @@
 
             <tbody>
               <tr
-                v-for="employee in employees"
+                v-for="employee in filteredEmployees"
                 :key="employee.id"
                 class="border-b border-slate-100 last:border-b-0"
               >
@@ -136,7 +202,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import dayjs from 'dayjs'
 
@@ -148,11 +214,76 @@ import {
 } from '../../api/employees'
 import { getBackendErrorMessage } from '../../utils/api'
 
+import FiltersPanel from '../../components/filters/FiltersPanel.vue'
+
 const employees = ref<Employee[]>([])
 const isLoading = ref<boolean>(false)
 const hasError = ref<boolean>(false)
 const updatingEmployeeId = ref<number | null>(null)
 const tableErrorMessage = ref<string>('')
+
+const searchQuery = ref<string>('')
+const statusFilter = ref<'all' | 'active' | 'inactive'>('all')
+const weeklyHoursFilter = ref<string>('') // string porque viene del select
+const sortBy = ref<'name' | 'status' | 'weeklyHours' | 'createdAt'>('name')
+
+const weeklyHoursOptions = computed(() => {
+  const hours = employees.value.map((e) => e.max_weekly_hours)
+  return Array.from(new Set(hours)).sort((a, b) => a - b)
+})
+
+const filteredEmployees = computed(() => {
+  let result = [...employees.value]
+
+  if (searchQuery.value.trim()) {
+    const query = searchQuery.value.toLowerCase()
+    result = result.filter((e) =>
+      `${e.first_name} ${e.last_name}`.toLowerCase().includes(query),
+    )
+  }
+
+  if (statusFilter.value !== 'all') {
+    result = result.filter((e) =>
+      statusFilter.value === 'active' ? e.active : !e.active,
+    )
+  }
+
+  if (weeklyHoursFilter.value !== '') {
+    result = result.filter(
+      (e) => e.max_weekly_hours === Number(weeklyHoursFilter.value),
+    )
+  }
+
+  result.sort((a, b) => {
+    let valueA: any
+    let valueB: any
+
+    switch (sortBy.value) {
+      case 'name':
+        valueA = `${a.first_name} ${a.last_name}`
+        valueB = `${b.first_name} ${b.last_name}`
+        break
+      case 'status':
+        valueA = a.active
+        valueB = b.active
+        break
+      case 'weeklyHours':
+        valueA = a.max_weekly_hours
+        valueB = b.max_weekly_hours
+        break
+      case 'createdAt':
+        valueA = a.created_at
+        valueB = b.created_at
+        break
+    }
+
+    if (valueA < valueB) return -1
+    if (valueA > valueB) return 1
+    return 0
+  })
+
+  return result
+})
 
 function formatDate(value: string): string {
   return dayjs(value).format('DD/MM/YYYY HH:mm')
