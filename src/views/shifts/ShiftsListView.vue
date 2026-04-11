@@ -21,6 +21,71 @@
         </RouterLink>
       </div>
 
+      <FiltersPanel>
+        <div class="flex flex-col gap-2">
+          <label for="shift-employee" class="text-sm font-medium text-slate-700">
+            Employee
+          </label>
+          <select
+            id="shift-employee"
+            v-model="selectedEmployee"
+            class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition focus:border-blue-500"
+          >
+            <option value="all">All employees</option>
+            <option
+              v-for="employee in employeeOptions"
+              :key="employee.id"
+              :value="employee.id"
+            >
+              {{ employee.name }}
+            </option>
+          </select>
+        </div>
+      
+        <div class="flex flex-col gap-2">
+          <label for="shift-date" class="text-sm font-medium text-slate-700">
+            Date
+          </label>
+          <input
+            id="shift-date"
+            v-model="selectedDate"
+            type="date"
+            class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition focus:border-blue-500"
+          />
+        </div>
+      
+        <div class="flex flex-col gap-2">
+          <label for="shift-status" class="text-sm font-medium text-slate-700">
+            Status
+          </label>
+          <select
+            id="shift-status"
+            v-model="selectedStatus"
+            class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition focus:border-blue-500"
+          >
+            <option value="all">All</option>
+            <option value="planned">Planned</option>
+            <option value="assigned">Assigned</option>
+            <option value="pending">Pending</option>
+          </select>
+        </div>
+      
+        <div class="flex flex-col gap-2">
+          <label for="shift-creation-type" class="text-sm font-medium text-slate-700">
+            Creation type
+          </label>
+          <select
+            id="shift-creation-type"
+            v-model="selectedCreationType"
+            class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition focus:border-blue-500"
+          >
+            <option value="all">All</option>
+            <option value="manual">Manual</option>
+            <option value="automatic">Automatic</option>
+          </select>
+        </div>
+      </FiltersPanel>
+
       <section class="rounded-3xl border border-slate-200 bg-white shadow-sm">
         <div v-if="isLoading" class="p-6 text-sm text-slate-500">
           Loading shifts...
@@ -32,7 +97,7 @@
           </div>
         </div>
 
-        <div v-else-if="shifts.length === 0" class="p-6 text-sm text-slate-500">
+        <div v-else-if="filteredShifts.length === 0" class="p-6 text-sm text-slate-500">
           No shifts found.
         </div>
 
@@ -40,10 +105,10 @@
           <table class="min-w-full border-collapse text-sm">
             <thead>
               <tr class="border-b border-slate-200 bg-slate-50 text-left text-slate-500">
+                <th class="px-6 py-4 font-semibold">Employee</th>
                 <th class="px-6 py-4 font-semibold">Date</th>
                 <th class="px-6 py-4 font-semibold">Start</th>
                 <th class="px-6 py-4 font-semibold">End</th>
-                <th class="px-6 py-4 font-semibold">Schedule</th>
                 <th class="px-6 py-4 font-semibold">Type</th>
                 <th class="px-6 py-4 font-semibold">Status</th>
                 <th v-if="isAdmin" class="px-6 py-4 font-semibold">Actions</th>
@@ -52,10 +117,14 @@
 
             <tbody>
               <tr
-                v-for="shift in shifts"
+                v-for="shift in filteredShifts"
                 :key="shift.id"
                 class="border-b border-slate-100 last:border-b-0"
               >
+                <td class="px-6 py-4 text-slate-900">
+                  {{ shift.employee_name || 'Unassigned' }}
+                </td>
+
                 <td class="px-6 py-4 text-slate-900">
                   {{ formatDate(shift.date) }}
                 </td>
@@ -66,10 +135,6 @@
 
                 <td class="px-6 py-4 text-slate-600">
                   {{ shift.end_time }}
-                </td>
-
-                <td class="px-6 py-4 text-slate-600">
-                  #{{ shift.schedule_id }}
                 </td>
 
                 <td class="px-6 py-4 text-slate-600">
@@ -126,12 +191,14 @@ import { RouterLink } from 'vue-router'
 import dayjs from 'dayjs'
 
 import AppShell from '../../components/layout/AppShell.vue'
-import { deleteShift, getShifts, type Shift } from '../../api/shifts'
+import { deleteShift, getShiftsTable, type ShiftTableItem } from '../../api/shifts'
 import { getBackendErrorMessage } from '../../utils/api'
 import { useAuthStore } from '../../stores/auth'
 import { storeToRefs } from 'pinia'
 
-const shifts = ref<Shift[]>([])
+import FiltersPanel from '../../components/filters/FiltersPanel.vue'
+
+const shifts = ref<ShiftTableItem[]>([])
 const isLoading = ref<boolean>(false)
 const hasError = ref<boolean>(false)
 const deletingShiftId = ref<number | null>(null)
@@ -141,6 +208,54 @@ const authStore = useAuthStore()
 const { userRole } = storeToRefs(authStore)
 
 const isAdmin = computed(() => userRole.value === 'admin')
+
+const selectedEmployee = ref<string>('all')
+const selectedStatus = ref<'all' | 'planned' | 'assigned' | 'pending'>('all')
+const selectedCreationType = ref<'all' | 'manual' | 'automatic'>('all')
+const selectedDate = ref<string>('')
+
+const employeeOptions = computed(() => {
+  const uniqueEmployees = new Map<string, string>()
+
+  shifts.value.forEach((shift) => {
+    if (shift.employee_id && shift.employee_name) {
+      uniqueEmployees.set(String(shift.employee_id), shift.employee_name)
+    }
+  })
+
+  return Array.from(uniqueEmployees.entries()).map(([id, name]) => ({
+    id,
+    name,
+  }))
+})
+
+const filteredShifts = computed(() => {
+  let result = [...shifts.value]
+
+  if (selectedEmployee.value !== 'all') {
+    result = result.filter(
+      (shift) => String(shift.employee_id) === selectedEmployee.value,
+    )
+  }
+
+  if (selectedDate.value) {
+    result = result.filter(
+      (shift) => dayjs(shift.date).format('YYYY-MM-DD') === selectedDate.value,
+    )
+  }
+
+  if (selectedStatus.value !== 'all') {
+    result = result.filter((shift) => shift.status === selectedStatus.value)
+  }
+
+  if (selectedCreationType.value !== 'all') {
+    result = result.filter(
+      (shift) => shift.creation_type === selectedCreationType.value,
+    )
+  }
+
+  return result
+})
 
 function formatDate(value: string): string {
   return dayjs(value).format('DD/MM/YYYY')
@@ -152,7 +267,7 @@ async function loadShifts(): Promise<void> {
   tableErrorMessage.value = ''
 
   try {
-    shifts.value = await getShifts()
+    shifts.value = await getShiftsTable()
   } catch {
     hasError.value = true
   } finally {

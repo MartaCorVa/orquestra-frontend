@@ -29,8 +29,24 @@ export interface UpdateShiftPayload {
   schedule_id?: number
 }
 
+export type ShiftTableItem = {
+  id: number
+  date: string
+  start_time: string
+  end_time: string
+  creation_type: string
+  status: string
+  employee_id: number | null
+  employee_name: string | null
+}
+
 export async function getShifts(): Promise<Shift[]> {
   const response = await apiClient.get<Shift[]>('/shifts/')
+  return response.data
+}
+
+export async function getShiftsTable(): Promise<ShiftTableItem[]> {
+  const response = await apiClient.get<ShiftTableItem[]>('/shifts/table')
   return response.data
 }
 
