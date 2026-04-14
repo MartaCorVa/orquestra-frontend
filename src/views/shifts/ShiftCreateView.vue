@@ -24,6 +24,7 @@
         v-else
         :form="form"
         :schedules="schedules"
+        :employees="employees"
         :is-submitting="isSubmitting"
         :error-message="errorMessage"
         submit-label="Create shift"
@@ -42,22 +43,37 @@ import ShiftForm from '../../components/shifts/ShiftForm.vue'
 import { getSchedules, type Schedule } from '../../api/schedules'
 import { createShift, type CreateShiftPayload } from '../../api/shifts'
 import { getBackendErrorMessage } from '../../utils/api'
+import { getEmployees, type Employee } from '../../api/employees'
 
 const router = useRouter()
 
+const employees = ref<Employee[]>([])
+const isLoadingEmployees = ref<boolean>(false)
 const schedules = ref<Schedule[]>([])
 const isLoadingSchedules = ref<boolean>(false)
 const isSubmitting = ref<boolean>(false)
 const errorMessage = ref<string>('')
 
 const form = reactive({
-  date: '',
+  employee_id: null as number | null,
+  start_date: '',
   start_time: '',
+  end_date: '',
   end_time: '',
   creation_type: 'manual',
   status: 'planned',
   schedule_id: 0,
 })
+
+async function loadEmployees(): Promise<void> {
+  isLoadingEmployees.value = true
+
+  try {
+    employees.value = await getEmployees()
+  } finally {
+    isLoadingEmployees.value = false
+  }
+}
 
 async function loadSchedules(): Promise<void> {
   isLoadingSchedules.value = true
@@ -91,6 +107,9 @@ async function handleSubmit(payload: CreateShiftPayload): Promise<void> {
 }
 
 onMounted(() => {
-  void loadSchedules()
+  void Promise.all([
+    loadSchedules(),
+    loadEmployees(),
+  ])
 })
 </script>
