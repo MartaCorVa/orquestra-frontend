@@ -106,17 +106,17 @@
           >
             <option value="planned">planned</option>
             <option value="assigned">assigned</option>
-            <option value="pending">pending</option>
+            <option value="cancelled">cancelled</option>
           </select>
         </div>
       </div>
 
       <p
         v-if="timeValidationMessage"
-        class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
-        >
-            {{ timeValidationMessage }}
-    	</p>
+        class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700"
+      >
+        {{ timeValidationMessage }}
+      </p>
 
       <p
         v-if="errorMessage"
@@ -136,7 +136,7 @@
         <button
           type="submit"
           class="rounded-xl bg-blue-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-70"
-          :disabled="isSubmitting || Boolean(timeValidationMessage)"
+          :disabled="isSubmitting || !canSubmit"
         >
           {{ submitLabel }}
         </button>
@@ -153,8 +153,17 @@ import dayjs from 'dayjs'
 import type { Schedule } from '../../api/schedules'
 import type { CreateShiftPayload } from '../../api/shifts'
 
+interface ShiftFormState {
+  date: string
+  start_time: string
+  end_time: string
+  creation_type: string
+  status: string
+  schedule_id: number
+}
+
 interface Props {
-  form: CreateShiftPayload
+  form: ShiftFormState
   schedules: Schedule[]
   isSubmitting: boolean
   errorMessage: string
@@ -167,7 +176,7 @@ const emit = defineEmits<{
   submit: [payload: CreateShiftPayload]
 }>()
 
-const localForm = reactive<CreateShiftPayload>({
+const localForm = reactive<ShiftFormState>({
   date: props.form.date,
   start_time: props.form.start_time,
   end_time: props.form.end_time,
@@ -176,13 +185,22 @@ const localForm = reactive<CreateShiftPayload>({
   schedule_id: props.form.schedule_id,
 })
 
+const canSubmit = computed<boolean>(() => {
+  return Boolean(
+    localForm.date &&
+    localForm.start_time &&
+    localForm.end_time &&
+    localForm.schedule_id,
+  )
+})
+
 const timeValidationMessage = computed<string>(() => {
   if (!localForm.start_time || !localForm.end_time) {
     return ''
   }
 
   if (localForm.end_time <= localForm.start_time) {
-    return 'End time must be later than start time.'
+    return 'End time is earlier than or equal to start time, so the shift will end on the next day.'
   }
 
   return ''
@@ -205,15 +223,30 @@ function formatDate(value: string): string {
   return dayjs(value).format('DD/MM/YYYY')
 }
 
+function buildDatetimes(): { start_datetime: string; end_datetime: string } {
+  const start = dayjs(`${localForm.date}T${localForm.start_time}`)
+  let end = dayjs(`${localForm.date}T${localForm.end_time}`)
+
+  if (localForm.end_time <= localForm.start_time) {
+    end = end.add(1, 'day')
+  }
+
+  return {
+    start_datetime: start.toISOString(),
+    end_datetime: end.toISOString(),
+  }
+}
+
 function handleSubmit(): void {
-  if (timeValidationMessage.value) {
+  if (!canSubmit.value) {
     return
   }
 
+  const { start_datetime, end_datetime } = buildDatetimes()
+
   emit('submit', {
-    date: localForm.date,
-    start_time: localForm.start_time,
-    end_time: localForm.end_time,
+    start_datetime,
+    end_datetime,
     creation_type: localForm.creation_type,
     status: localForm.status,
     schedule_id: localForm.schedule_id,

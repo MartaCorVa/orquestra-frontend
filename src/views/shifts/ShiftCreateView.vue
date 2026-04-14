@@ -50,7 +50,7 @@ const isLoadingSchedules = ref<boolean>(false)
 const isSubmitting = ref<boolean>(false)
 const errorMessage = ref<string>('')
 
-const form = reactive<CreateShiftPayload>({
+const form = reactive({
   date: '',
   start_time: '',
   end_time: '',
