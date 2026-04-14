@@ -66,7 +66,7 @@
             <option value="all">All</option>
             <option value="planned">Planned</option>
             <option value="assigned">Assigned</option>
-            <option value="pending">Pending</option>
+            <option value="cancelled">Cancelled</option>
           </select>
         </div>
       
@@ -210,7 +210,7 @@ const { userRole } = storeToRefs(authStore)
 const isAdmin = computed(() => userRole.value === 'admin')
 
 const selectedEmployee = ref<string>('all')
-const selectedStatus = ref<'all' | 'planned' | 'assigned' | 'pending'>('all')
+const selectedStatus = ref<'all' | 'planned' | 'assigned' | 'cancelled'>('all')
 const selectedCreationType = ref<'all' | 'manual' | 'automatic'>('all')
 const selectedDate = ref<string>('')
 
