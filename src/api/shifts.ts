@@ -8,6 +8,8 @@ export interface Shift {
   status: string
   schedule_id: number
   created_at: string
+  employee_id: number | null
+  employee_name: string | null
 }
 
 export interface CreateShiftPayload {
