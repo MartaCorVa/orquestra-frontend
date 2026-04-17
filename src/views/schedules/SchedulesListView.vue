@@ -44,7 +44,7 @@
         </RouterLink>
       </section>
 
-      <FiltersPanel v-if="activeTab === 'table'">
+      <FiltersPanel>
         <div class="flex flex-col gap-2">
           <label for="schedule-start-date" class="text-sm font-medium text-slate-700">
             Start date
@@ -191,7 +191,7 @@
 
       <SchedulesCalendar
         v-else
-        :schedules="schedules"
+        :schedules="filteredSchedules"
         :is-loading="isLoading"
         :has-error="hasError"
       />
