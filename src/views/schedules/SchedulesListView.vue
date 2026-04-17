@@ -20,7 +20,7 @@
           >
             Table
           </button>
-        
+
           <button
             type="button"
             class="rounded-xl px-4 py-2 text-sm font-medium transition"
@@ -34,7 +34,7 @@
             Calendar
           </button>
         </div>
-      
+
         <RouterLink
           v-if="isAdmin"
           to="/schedules/new"
@@ -43,6 +43,67 @@
           Create schedule
         </RouterLink>
       </section>
+
+      <FiltersPanel>
+        <div class="flex flex-col gap-2">
+          <label for="schedule-start-date" class="text-sm font-medium text-slate-700">
+            Start date
+          </label>
+          <input
+            id="schedule-start-date"
+            v-model="selectedStartDate"
+            type="date"
+            :max="selectedEndDate || undefined"
+            class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition focus:border-blue-500"
+          />
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label for="schedule-end-date" class="text-sm font-medium text-slate-700">
+            End date
+          </label>
+          <input
+            id="schedule-end-date"
+            v-model="selectedEndDate"
+            type="date"
+            :min="selectedStartDate || undefined"
+            class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition focus:border-blue-500"
+          />
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label for="schedule-status" class="text-sm font-medium text-slate-700">
+            Status
+          </label>
+          <select
+            id="schedule-status"
+            v-model="selectedStatus"
+            class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition focus:border-blue-500"
+          >
+            <option value="all">All</option>
+            <option value="draft">Draft</option>
+            <option value="generated">Generated</option>
+            <option value="published">Published</option>
+          </select>
+        </div>
+        <div class="flex items-end">
+          <button
+            type="button"
+            :disabled="!selectedStartDate && !selectedEndDate && selectedStatus === 'all'"
+            class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            @click="clearFilters"
+          >
+            Clear filters
+          </button>
+        </div>
+      </FiltersPanel>
+
+      <p
+        v-if="isInvalidDateRange"
+        class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+      >
+        Start date cannot be later than end date.
+      </p>
 
       <section
         v-if="activeTab === 'table'"
@@ -58,7 +119,7 @@
           </div>
         </div>
 
-        <div v-else-if="schedules.length === 0" class="p-6 text-sm text-slate-500">
+        <div v-else-if="filteredSchedules.length === 0" class="p-6 text-sm text-slate-500">
           No schedules found.
         </div>
 
@@ -76,7 +137,7 @@
 
             <tbody>
               <tr
-                v-for="schedule in schedules"
+                v-for="schedule in filteredSchedules"
                 :key="schedule.id"
                 class="border-b border-slate-100 last:border-b-0"
               >
@@ -130,7 +191,7 @@
 
       <SchedulesCalendar
         v-else
-        :schedules="schedules"
+        :schedules="filteredSchedules"
         :is-loading="isLoading"
         :has-error="hasError"
       />
@@ -159,6 +220,7 @@ import dayjs from 'dayjs'
 import { storeToRefs } from 'pinia'
 
 import AppShell from '../../components/layout/AppShell.vue'
+import FiltersPanel from '../../components/filters/FiltersPanel.vue'
 import SchedulesCalendar from '../../components/schedules/SchedulesCalendar.vue'
 import {
   generatePlanning,
@@ -169,6 +231,7 @@ import { getBackendErrorMessage } from '../../utils/api'
 import { useAuthStore } from '../../stores/auth'
 
 type SchedulesTab = 'table' | 'calendar'
+type ScheduleStatusFilter = 'all' | 'draft' | 'generated' | 'published'
 
 const activeTab = ref<SchedulesTab>('table')
 
@@ -179,10 +242,50 @@ const generatingScheduleId = ref<number | null>(null)
 const tableMessage = ref<string>('')
 const tableErrorMessage = ref<string>('')
 
+const selectedStartDate = ref<string>('')
+const selectedEndDate = ref<string>('')
+const selectedStatus = ref<ScheduleStatusFilter>('all')
+
 const authStore = useAuthStore()
 const { userRole } = storeToRefs(authStore)
 
 const isAdmin = computed(() => userRole.value === 'admin')
+
+const filteredSchedules = computed<Schedule[]>(() => {
+  if (isInvalidDateRange.value) {
+    return []
+  }
+
+  let result = [...schedules.value]
+
+  if (selectedStartDate.value) {
+    result = result.filter((schedule) => schedule.end_date >= selectedStartDate.value)
+  }
+
+  if (selectedEndDate.value) {
+    result = result.filter((schedule) => schedule.start_date <= selectedEndDate.value)
+  }
+
+  if (selectedStatus.value !== 'all') {
+    result = result.filter((schedule) => schedule.status === selectedStatus.value)
+  }
+
+  return result
+})
+
+const isInvalidDateRange = computed(() => {
+  if (!selectedStartDate.value || !selectedEndDate.value) {
+    return false
+  }
+
+  return selectedStartDate.value > selectedEndDate.value
+})
+
+function clearFilters(): void {
+  selectedStartDate.value = ''
+  selectedEndDate.value = ''
+  selectedStatus.value = 'all'
+}
 
 function formatDate(value: string): string {
   return dayjs(value).format('DD/MM/YYYY')

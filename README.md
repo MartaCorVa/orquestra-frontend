@@ -16,7 +16,7 @@ This repository contains the frontend of the system, built as a Single Page Appl
 * Tailwind CSS
 * Axios
 * Day.js
-* FullCalendar
+* FullCalendar (used for schedule visualization)
 * Chart.js
 
 ---
@@ -229,20 +229,76 @@ The application includes a module for managing shifts associated with schedules.
 
 ## 📅 Schedule management
 
-The application allows administrators to manage schedules and generate planning automatically.
+The application allows administrators to manage schedules and visualize them through both **table and calendar views**.
 
 ### Features
 
-* View list of schedules
+* View schedules in:
+  * **Table view**
+  * **Calendar view (month, week, day)**
 * Create schedules with date range and status
 * View schedule details
-* Delete schedules
+* Generate planning for a schedule
+
+---
+
+### Table view
+
+* Displays schedules in a tabular format  
+* Columns include:
+  * start date  
+  * end date  
+  * status  
+  * creation date  
+
+#### Filters
+
+Schedules can be filtered using a shared filter panel:
+
+* **Start date**
+* **End date**
+* **Status**
+
+Filtering uses an **overlap-based approach**:
+
+* A schedule is included if it intersects with the selected date range  
+
+#### UX behavior
+
+* Filters apply instantly to the table  
+* A **"Clear filters"** action resets all filters  
+* Date inputs prevent invalid ranges using `min` and `max` constraints  
+
+---
+
+### Calendar view
+
+* Displays schedules using a FullCalendar-based interface  
+* Supports:
+  * month view  
+  * week view  
+  * day view  
+
+#### Behavior
+
+* Each schedule is rendered as an event spanning its date range  
+* Events are color-coded based on status  
+* Clicking an event navigates to the schedule detail view  
+
+#### Filters
+
+* The same filters used in the table view are applied to the calendar  
+* Both views always display the same filtered dataset  
+
+---
 
 ### Schedule detail view
 
-* Displays all shifts associated with the schedule
-* Shows assignments grouped by date
-* Provides a weekly overview of planning
+* Displays shifts associated with the selected schedule  
+* Provides a calendar-based visualization of planning  
+* Shows assignments and schedule distribution  
+
+---
 
 ### Access control
 
@@ -393,3 +449,4 @@ src/
 * Account creation is performed through employee onboarding  
 * The UI prioritizes clarity and stability for desktop usage  
 * Layout decisions (fixed widths, table stability) were made to improve usability and visual consistency  
+* Schedule data can be explored through both table and calendar views, sharing the same filtering logic  
