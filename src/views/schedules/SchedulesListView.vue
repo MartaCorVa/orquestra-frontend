@@ -1,17 +1,10 @@
 <template>
   <AppShell
     title="Schedules"
-    subtitle="View, create, and manage planning schedules."
+    subtitle="Manage planning periods and access schedule generation."
   >
     <section class="space-y-6">
-      <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <h2 class="text-2xl font-semibold text-slate-900">Schedules</h2>
-          <p class="mt-2 text-sm text-slate-600">
-            Manage planning periods and access schedule generation.
-          </p>
-        </div>
-
+      <div class="flex flex-col gap-4 lg:flex-row lg:justify-end">
         <div class="flex gap-3">
           <RouterLink
             v-if="isAdmin"

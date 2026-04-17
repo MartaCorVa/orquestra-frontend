@@ -1,17 +1,10 @@
 <template>
   <AppShell
     title="Shifts"
-    subtitle="View, create, edit, and manage shifts."
+    subtitle="Review schedule shifts and manage manual entries."
   >
     <section class="space-y-6">
-      <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <h2 class="text-2xl font-semibold text-slate-900">Shifts</h2>
-          <p class="mt-2 text-sm text-slate-600">
-            Review schedule shifts and manage manual entries.
-          </p>
-        </div>
-
+      <div class="flex flex-col gap-4 lg:flex-row lg:justify-end">
         <RouterLink
           v-if="isAdmin"
           to="/shifts/new"
