@@ -253,7 +253,7 @@ const filteredShifts = computed(() => {
 })
 
 function formatTime(value: string): string {
-  return dayjs(value).format('HH:mm')
+  return dayjs(value).format('DD/MM/YYYY · HH:mm')
 }
 
 async function loadShifts(): Promise<void> {
