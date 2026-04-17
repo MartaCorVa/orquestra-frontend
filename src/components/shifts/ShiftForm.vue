@@ -285,8 +285,12 @@ function formatDate(value: string): string {
 
 function buildDatetimes(): { start_datetime: string; end_datetime: string } {
   return {
-    start_datetime: dayjs(`${localForm.start_date}T${localForm.start_time}`).toISOString(),
-    end_datetime: dayjs(`${localForm.end_date}T${localForm.end_time}`).toISOString(),
+    start_datetime: dayjs(
+      `${localForm.start_date}T${localForm.start_time}`,
+    ).format('YYYY-MM-DDTHH:mm:ss'),
+    end_datetime: dayjs(
+      `${localForm.end_date}T${localForm.end_time}`,
+    ).format('YYYY-MM-DDTHH:mm:ss'),
   }
 }
 
