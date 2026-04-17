@@ -8,16 +8,16 @@
         <div>
           <h2 class="text-2xl font-semibold text-slate-900">Create shift</h2>
           <p class="mt-2 text-sm text-slate-600">
-            Define the date, time, schedule, and status of the shift.
+            Define the start and end date/time, schedule, employee, and status of the shift.
           </p>
         </div>
       </div>
 
       <div
-        v-if="isLoadingSchedules"
+        v-if="isLoadingSchedules || isLoadingEmployees"
         class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm"
       >
-        <p class="text-sm text-slate-500">Loading schedules...</p>
+        <p class="text-sm text-slate-500">Loading shift form data...</p>
       </div>
 
       <ShiftForm
@@ -35,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import AppShell from '../../components/layout/AppShell.vue'
@@ -64,6 +64,16 @@ const form = reactive({
   status: 'planned',
   schedule_id: 0,
 })
+
+watch(
+  form,
+  () => {
+    if (errorMessage.value) {
+      errorMessage.value = ''
+    }
+  },
+  { deep: true },
+)
 
 async function loadEmployees(): Promise<void> {
   isLoadingEmployees.value = true
