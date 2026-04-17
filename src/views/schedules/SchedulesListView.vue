@@ -53,6 +53,7 @@
             id="schedule-start-date"
             v-model="selectedStartDate"
             type="date"
+            :max="selectedEndDate || undefined"
             class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition focus:border-blue-500"
           />
         </div>
@@ -65,6 +66,7 @@
             id="schedule-end-date"
             v-model="selectedEndDate"
             type="date"
+            :min="selectedStartDate || undefined"
             class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition focus:border-blue-500"
           />
         </div>
@@ -95,6 +97,13 @@
           </button>
         </div>
       </FiltersPanel>
+
+      <p
+        v-if="isInvalidDateRange"
+        class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+      >
+        Start date cannot be later than end date.
+      </p>
 
       <section
         v-if="activeTab === 'table'"
@@ -243,6 +252,10 @@ const { userRole } = storeToRefs(authStore)
 const isAdmin = computed(() => userRole.value === 'admin')
 
 const filteredSchedules = computed<Schedule[]>(() => {
+  if (isInvalidDateRange.value) {
+    return []
+  }
+
   let result = [...schedules.value]
 
   if (selectedStartDate.value) {
@@ -258,6 +271,14 @@ const filteredSchedules = computed<Schedule[]>(() => {
   }
 
   return result
+})
+
+const isInvalidDateRange = computed(() => {
+  if (!selectedStartDate.value || !selectedEndDate.value) {
+    return false
+  }
+
+  return selectedStartDate.value > selectedEndDate.value
 })
 
 function clearFilters(): void {
