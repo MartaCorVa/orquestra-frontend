@@ -4,19 +4,50 @@
     subtitle="Manage planning periods and access schedule generation."
   >
     <section class="space-y-6">
-      <div class="flex flex-col gap-4 lg:flex-row lg:justify-end">
-        <div class="flex gap-3">
-          <RouterLink
-            v-if="isAdmin"
-            to="/schedules/new"
-            class="rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-800"
+      <section
+        class="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm lg:flex-row lg:items-center lg:justify-between"
+      >
+        <div class="inline-flex rounded-2xl border border-slate-200 bg-slate-100 p-1">
+          <button
+            type="button"
+            class="rounded-xl px-4 py-2 text-sm font-medium transition"
+            :class="
+              activeTab === 'table'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-500 hover:text-slate-700'
+            "
+            @click="activeTab = 'table'"
           >
-            Create schedule
-          </RouterLink>
+            Table
+          </button>
+        
+          <button
+            type="button"
+            class="rounded-xl px-4 py-2 text-sm font-medium transition"
+            :class="
+              activeTab === 'calendar'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-500 hover:text-slate-700'
+            "
+            @click="activeTab = 'calendar'"
+          >
+            Calendar
+          </button>
         </div>
-      </div>
+      
+        <RouterLink
+          v-if="isAdmin"
+          to="/schedules/new"
+          class="inline-flex items-center justify-center rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-800"
+        >
+          Create schedule
+        </RouterLink>
+      </section>
 
-      <section class="rounded-3xl border border-slate-200 bg-white shadow-sm">
+      <section
+        v-if="activeTab === 'table'"
+        class="rounded-3xl border border-slate-200 bg-white shadow-sm"
+      >
         <div v-if="isLoading" class="p-6 text-sm text-slate-500">
           Loading schedules...
         </div>
@@ -97,6 +128,13 @@
         </div>
       </section>
 
+      <SchedulesCalendar
+        v-else
+        :schedules="schedules"
+        :is-loading="isLoading"
+        :has-error="hasError"
+      />
+
       <p
         v-if="tableMessage"
         class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
@@ -118,8 +156,10 @@
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import dayjs from 'dayjs'
+import { storeToRefs } from 'pinia'
 
 import AppShell from '../../components/layout/AppShell.vue'
+import SchedulesCalendar from '../../components/schedules/SchedulesCalendar.vue'
 import {
   generatePlanning,
   getSchedules,
@@ -127,7 +167,10 @@ import {
 } from '../../api/schedules'
 import { getBackendErrorMessage } from '../../utils/api'
 import { useAuthStore } from '../../stores/auth'
-import { storeToRefs } from 'pinia'
+
+type SchedulesTab = 'table' | 'calendar'
+
+const activeTab = ref<SchedulesTab>('table')
 
 const schedules = ref<Schedule[]>([])
 const isLoading = ref<boolean>(false)

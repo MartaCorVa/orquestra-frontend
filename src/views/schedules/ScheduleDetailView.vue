@@ -71,7 +71,7 @@
           {{ errorMessage }}
         </p>
 
-        <ScheduleCalendarGrid :schedule="schedule" />
+        <ScheduleFullCalendar :schedule="schedule" />
       </template>
     </section>
   </AppShell>
@@ -84,7 +84,7 @@ import { storeToRefs } from 'pinia'
 import dayjs from 'dayjs'
 
 import AppShell from '../../components/layout/AppShell.vue'
-import ScheduleCalendarGrid from '../../components/schedules/ScheduleCalendarGrid.vue'
+import ScheduleFullCalendar from '../../components/schedules/ScheduleDetailCalendar.vue'
 import { useAuthStore } from '../../stores/auth'
 import {
   generatePlanning,
