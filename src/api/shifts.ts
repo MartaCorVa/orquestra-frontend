@@ -2,38 +2,38 @@ import apiClient from './axios'
 
 export interface Shift {
   id: number
-  date: string
-  start_time: string
-  end_time: string
+  start_datetime: string
+  end_datetime: string
   creation_type: string
   status: string
   schedule_id: number
   created_at: string
+  employee_id: number | null
+  employee_name: string | null
 }
 
 export interface CreateShiftPayload {
-  date: string
-  start_time: string
-  end_time: string
+  start_datetime: string
+  end_datetime: string
   creation_type: string
   status: string
   schedule_id: number
+  employee_id?: number | null
 }
 
 export interface UpdateShiftPayload {
-  date?: string
-  start_time?: string
-  end_time?: string
+  start_datetime?: string
+  end_datetime?: string
   creation_type?: string
   status?: string
   schedule_id?: number
+  employee_id?: number | null
 }
 
 export type ShiftTableItem = {
   id: number
-  date: string
-  start_time: string
-  end_time: string
+  start_datetime: string
+  end_datetime: string
   creation_type: string
   status: string
   employee_id: number | null

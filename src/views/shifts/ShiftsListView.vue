@@ -66,7 +66,7 @@
             <option value="all">All</option>
             <option value="planned">Planned</option>
             <option value="assigned">Assigned</option>
-            <option value="pending">Pending</option>
+            <option value="cancelled">Cancelled</option>
           </select>
         </div>
       
@@ -106,7 +106,6 @@
             <thead>
               <tr class="border-b border-slate-200 bg-slate-50 text-left text-slate-500">
                 <th class="px-6 py-4 font-semibold">Employee</th>
-                <th class="px-6 py-4 font-semibold">Date</th>
                 <th class="px-6 py-4 font-semibold">Start</th>
                 <th class="px-6 py-4 font-semibold">End</th>
                 <th class="px-6 py-4 font-semibold">Type</th>
@@ -125,16 +124,12 @@
                   {{ shift.employee_name || 'Unassigned' }}
                 </td>
 
-                <td class="px-6 py-4 text-slate-900">
-                  {{ formatDate(shift.date) }}
+                <td class="px-6 py-4 text-slate-600">
+                  {{ formatTime(shift.start_datetime) }}
                 </td>
 
                 <td class="px-6 py-4 text-slate-600">
-                  {{ shift.start_time }}
-                </td>
-
-                <td class="px-6 py-4 text-slate-600">
-                  {{ shift.end_time }}
+                  {{ formatTime(shift.end_datetime) }}
                 </td>
 
                 <td class="px-6 py-4 text-slate-600">
@@ -147,7 +142,7 @@
                   </span>
                 </td>
 
-                <td 
+                <td
                   v-if="isAdmin"
                   class="px-6 py-4"
                 >
@@ -210,7 +205,7 @@ const { userRole } = storeToRefs(authStore)
 const isAdmin = computed(() => userRole.value === 'admin')
 
 const selectedEmployee = ref<string>('all')
-const selectedStatus = ref<'all' | 'planned' | 'assigned' | 'pending'>('all')
+const selectedStatus = ref<'all' | 'planned' | 'assigned' | 'cancelled'>('all')
 const selectedCreationType = ref<'all' | 'manual' | 'automatic'>('all')
 const selectedDate = ref<string>('')
 
@@ -240,7 +235,7 @@ const filteredShifts = computed(() => {
 
   if (selectedDate.value) {
     result = result.filter(
-      (shift) => dayjs(shift.date).format('YYYY-MM-DD') === selectedDate.value,
+      (shift) => dayjs(shift.start_datetime).format('YYYY-MM-DD') === selectedDate.value,
     )
   }
 
@@ -257,8 +252,8 @@ const filteredShifts = computed(() => {
   return result
 })
 
-function formatDate(value: string): string {
-  return dayjs(value).format('DD/MM/YYYY')
+function formatTime(value: string): string {
+  return dayjs(value).format('DD/MM/YYYY · HH:mm')
 }
 
 async function loadShifts(): Promise<void> {

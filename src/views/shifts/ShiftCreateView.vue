@@ -8,22 +8,23 @@
         <div>
           <h2 class="text-2xl font-semibold text-slate-900">Create shift</h2>
           <p class="mt-2 text-sm text-slate-600">
-            Define the date, time, schedule, and status of the shift.
+            Define the start and end date/time, schedule, employee, and status of the shift.
           </p>
         </div>
       </div>
 
       <div
-        v-if="isLoadingSchedules"
+        v-if="isLoadingSchedules || isLoadingEmployees"
         class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm"
       >
-        <p class="text-sm text-slate-500">Loading schedules...</p>
+        <p class="text-sm text-slate-500">Loading shift form data...</p>
       </div>
 
       <ShiftForm
         v-else
         :form="form"
         :schedules="schedules"
+        :employees="employees"
         :is-submitting="isSubmitting"
         :error-message="errorMessage"
         submit-label="Create shift"
@@ -34,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import AppShell from '../../components/layout/AppShell.vue'
@@ -42,22 +43,47 @@ import ShiftForm from '../../components/shifts/ShiftForm.vue'
 import { getSchedules, type Schedule } from '../../api/schedules'
 import { createShift, type CreateShiftPayload } from '../../api/shifts'
 import { getBackendErrorMessage } from '../../utils/api'
+import { getEmployees, type Employee } from '../../api/employees'
 
 const router = useRouter()
 
+const employees = ref<Employee[]>([])
+const isLoadingEmployees = ref<boolean>(false)
 const schedules = ref<Schedule[]>([])
 const isLoadingSchedules = ref<boolean>(false)
 const isSubmitting = ref<boolean>(false)
 const errorMessage = ref<string>('')
 
-const form = reactive<CreateShiftPayload>({
-  date: '',
+const form = reactive({
+  employee_id: null as number | null,
+  start_date: '',
   start_time: '',
+  end_date: '',
   end_time: '',
   creation_type: 'manual',
   status: 'planned',
   schedule_id: 0,
 })
+
+watch(
+  form,
+  () => {
+    if (errorMessage.value) {
+      errorMessage.value = ''
+    }
+  },
+  { deep: true },
+)
+
+async function loadEmployees(): Promise<void> {
+  isLoadingEmployees.value = true
+
+  try {
+    employees.value = await getEmployees()
+  } finally {
+    isLoadingEmployees.value = false
+  }
+}
 
 async function loadSchedules(): Promise<void> {
   isLoadingSchedules.value = true
@@ -91,6 +117,9 @@ async function handleSubmit(payload: CreateShiftPayload): Promise<void> {
 }
 
 onMounted(() => {
-  void loadSchedules()
+  void Promise.all([
+    loadSchedules(),
+    loadEmployees(),
+  ])
 })
 </script>

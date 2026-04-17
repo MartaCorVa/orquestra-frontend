@@ -8,7 +8,7 @@
         <div>
           <h2 class="text-2xl font-semibold text-slate-900">Edit shift</h2>
           <p class="mt-2 text-sm text-slate-600">
-            Update the date, time, schedule, and current status of the shift.
+            Update the shift details, schedule, assigned employee, and current status.
           </p>
         </div>
       </div>
@@ -31,6 +31,7 @@
         v-else
         :form="form"
         :schedules="schedules"
+        :employees="employees"
         :is-submitting="isSubmitting"
         :error-message="errorMessage"
         submit-label="Save changes"
@@ -41,12 +42,14 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import dayjs from 'dayjs'
 
 import AppShell from '../../components/layout/AppShell.vue'
 import ShiftForm from '../../components/shifts/ShiftForm.vue'
 import { getSchedules, type Schedule } from '../../api/schedules'
+import { getEmployees, type Employee } from '../../api/employees'
 import { getShiftById, updateShift, type CreateShiftPayload } from '../../api/shifts'
 import { getBackendErrorMessage } from '../../utils/api'
 
@@ -54,14 +57,17 @@ const route = useRoute()
 const router = useRouter()
 
 const schedules = ref<Schedule[]>([])
+const employees = ref<Employee[]>([])
 const isLoading = ref<boolean>(false)
 const hasError = ref<boolean>(false)
 const isSubmitting = ref<boolean>(false)
 const errorMessage = ref<string>('')
 
-const form = reactive<CreateShiftPayload>({
-  date: '',
+const form = reactive({
+  employee_id: null as number | null,
+  start_date: '',
   start_time: '',
+  end_date: '',
   end_time: '',
   creation_type: 'manual',
   status: 'planned',
@@ -75,16 +81,20 @@ async function loadData(): Promise<void> {
   try {
     const shiftId = Number(route.params.id)
 
-    const [schedulesData, shiftData] = await Promise.all([
+    const [schedulesData, employeesData, shiftData] = await Promise.all([
       getSchedules(),
+      getEmployees(),
       getShiftById(shiftId),
     ])
 
     schedules.value = schedulesData
+    employees.value = employeesData
 
-    form.date = shiftData.date
-    form.start_time = shiftData.start_time
-    form.end_time = shiftData.end_time
+    form.employee_id = shiftData.employee_id ?? null
+    form.start_date = dayjs(shiftData.start_datetime).format('YYYY-MM-DD')
+    form.start_time = dayjs(shiftData.start_datetime).format('HH:mm')
+    form.end_date = dayjs(shiftData.end_datetime).format('YYYY-MM-DD')
+    form.end_time = dayjs(shiftData.end_datetime).format('HH:mm')
     form.creation_type = shiftData.creation_type
     form.status = shiftData.status
     form.schedule_id = shiftData.schedule_id
@@ -112,6 +122,16 @@ async function handleSubmit(payload: CreateShiftPayload): Promise<void> {
     isSubmitting.value = false
   }
 }
+
+watch(
+  form,
+  () => {
+    if (errorMessage.value) {
+      errorMessage.value = ''
+    }
+  },
+  { deep: true },
+)
 
 onMounted(() => {
   void loadData()
