@@ -1,17 +1,10 @@
 <template>
   <AppShell
     title="Employees"
-    subtitle="View, create, and manage employee records in the system."
+    subtitle="Manage employee accounts, working limits, and activation status."
   >
     <section class="space-y-6">
-      <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <h2 class="text-2xl font-semibold text-slate-900">Employees</h2>
-          <p class="mt-2 text-sm text-slate-600">
-            Manage employee accounts, working limits, and activation status.
-          </p>
-        </div>
-
+      <div class="flex flex-col gap-4 lg:flex-row lg:justify-end">
         <div class="flex gap-3">
           <RouterLink
             to="/employees/new"
