@@ -42,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import dayjs from 'dayjs'
 
@@ -122,6 +122,16 @@ async function handleSubmit(payload: CreateShiftPayload): Promise<void> {
     isSubmitting.value = false
   }
 }
+
+watch(
+  form,
+  () => {
+    if (errorMessage.value) {
+      errorMessage.value = ''
+    }
+  },
+  { deep: true },
+)
 
 onMounted(() => {
   void loadData()
