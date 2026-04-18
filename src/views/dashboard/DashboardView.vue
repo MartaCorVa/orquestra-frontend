@@ -130,7 +130,7 @@ const summaryCards = computed<SummaryCard[]>(() => [
     value: summaryMetrics.value.schedules,
   },
   {
-    label: 'Validation alerts',
+    label: 'Schedules to validate',
     value: summaryMetrics.value.pending_validations,
   },
 ])
