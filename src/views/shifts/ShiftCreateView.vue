@@ -4,15 +4,6 @@
     subtitle="Create a new shift and link it to a schedule."
   >
     <section class="mx-auto max-w-4xl space-y-6">
-      <div class="flex items-start justify-between gap-4">
-        <div>
-          <h2 class="text-2xl font-semibold text-slate-900">Create shift</h2>
-          <p class="mt-2 text-sm text-slate-600">
-            Define the start and end date/time, schedule, employee, and status of the shift.
-          </p>
-        </div>
-      </div>
-
       <div
         v-if="isLoadingSchedules || isLoadingEmployees"
         class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm"
