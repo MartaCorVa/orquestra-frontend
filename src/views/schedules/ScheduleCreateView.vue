@@ -4,22 +4,6 @@
     subtitle="Create a new planning period before generating shifts."
   >
     <section class="mx-auto max-w-4xl">
-      <div class="mb-6 flex items-start justify-between gap-4">
-        <div>
-          <h2 class="text-2xl font-semibold text-slate-900">Create schedule</h2>
-          <p class="mt-2 text-sm text-slate-600">
-            Define the date range and initial status of the schedule.
-          </p>
-        </div>
-
-        <RouterLink
-          to="/schedules"
-          class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-        >
-          Back
-        </RouterLink>
-      </div>
-
       <section class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
         <form class="space-y-6" @submit.prevent="handleSubmit">
           <div class="grid gap-6 md:grid-cols-2">
