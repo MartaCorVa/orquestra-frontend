@@ -141,7 +141,7 @@ The frontend enforces role-based visibility:
 
 ## 👥 Employee onboarding (admin)
 
-Employee creation is handled through a **single onboarding operation**.
+Employee creation is handled through a **single onboarding operation**, including contract creation.
 
 ### Endpoint
 
@@ -149,18 +149,76 @@ Employee creation is handled through a **single onboarding operation**.
 
 ### Behavior
 
-* Creates both:
+* Creates:
   * user account  
   * employee profile  
-* Links both entities internally  
+  * **initial contract**
+* Links all entities internally  
 * The created user has:
   * `must_change_password = true`  
 
+---
+
+### Contract model
+
+During onboarding, a contract must be defined with:
+
+* weekly_hours  
+* daily_hours  
+* min_days_off_per_week  
+* working days (Monday → Sunday)  
+* has_fixed_schedule  
+* preferred_start_time / preferred_end_time (required if fixed schedule is enabled)  
+* start_date / end_date  
+* active status  
+
+---
+
 ### Frontend behavior
 
-* Admin fills a single form  
+* Admin fills a **single form including contract data**  
+* Contract validation is enforced on the frontend:
+  * required fields  
+  * working days consistency  
+  * fixed schedule validation  
 * Only one request is sent to the backend  
-* No separate user creation is exposed in the UI  
+* No separate user or contract creation is exposed in the UI  
+
+---
+
+## 📄 Contract management
+
+Contracts define employee availability and workload constraints.
+
+### Behavior
+
+* Each employee has a **contract history**
+* Only one contract can be active at a time  
+* When a new contract is created:
+  * the previous active contract is automatically set to inactive  
+* Contracts are never overwritten → historical data is preserved  
+
+---
+
+### Frontend behavior
+
+* The active contract is loaded when editing an employee  
+* Editing contract data does not update the existing contract  
+* If any contract field is modified:
+  * a **new contract is created**
+  * the previous one becomes inactive automatically  
+* If no changes are made:
+  * no contract request is sent  
+
+---
+
+### Purpose
+
+This design allows:
+
+* accurate historical tracking  
+* reliable metrics calculation  
+* auditability of workload evolution  
 
 ---
 
