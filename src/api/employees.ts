@@ -5,7 +5,6 @@ export interface Employee {
   first_name: string
   last_name: string
   phone_number: string
-  max_weekly_hours: number
   active: boolean
   user_id: number
   created_at: string
@@ -18,7 +17,6 @@ export interface EmployeeOnboardingPayload {
   first_name: string
   last_name: string
   phone_number: string
-  max_weekly_hours: number
   active: boolean
 }
 
@@ -26,7 +24,6 @@ export interface UpdateEmployeePayload {
   first_name: string
   last_name: string
   phone_number: string
-  max_weekly_hours: number
   active: boolean
 }
 
