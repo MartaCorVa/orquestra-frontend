@@ -398,6 +398,7 @@ import {
   type EmployeeOnboardingPayload,
 } from '../../api/employees'
 import { getBackendErrorMessage } from '../../utils/api'
+import { useActivityStore } from '../../stores/activity'
 
 const router = useRouter()
 
@@ -434,6 +435,8 @@ const form = reactive<EmployeeOnboardingPayload>({
 const isSubmitting = ref<boolean>(false)
 const errorMessage = ref<string>('')
 const submitError = ref<string>('')
+
+const activityStore = useActivityStore()
 
 function getDaysOffCount(): number {
   const workingDays = [
@@ -509,6 +512,12 @@ async function handleSubmit(): Promise<void> {
     }
 
     await createEmployeeOnboarding(payload)
+
+    activityStore.addActivity(
+      `${form.first_name} ${form.last_name}`,
+      'Employee created',
+    )
+
     await router.push({ name: 'employees' })
   } catch (error: unknown) {
     errorMessage.value = getBackendErrorMessage(
