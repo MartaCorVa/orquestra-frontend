@@ -8,7 +8,7 @@
         <div>
           <h2 class="text-2xl font-semibold text-slate-900">Edit employee</h2>
           <p class="mt-2 text-sm text-slate-600">
-            Update employee details already registered in the system.
+            Update employee details and active contract settings.
           </p>
         </div>
       </div>
@@ -24,6 +24,7 @@
       <EmployeeForm
         v-else
         :form="form"
+        :contract-form="contractForm"
         :is-submitting="isSubmitting"
         :error-message="errorMessage"
         submit-label="Save changes"
@@ -44,11 +45,19 @@ import {
   updateEmployee,
   type UpdateEmployeePayload,
 } from '../../api/employees'
+import {
+  createContract,
+  getActiveContractByEmployee,
+  type CreateContractPayload,
+} from '../../api/contracts'
 import { getBackendErrorMessage } from '../../utils/api'
 import { useActivityStore } from '../../stores/activity'
 
+type EditableContractPayload = Omit<CreateContractPayload, 'employee_id'>
+
 const route = useRoute()
 const router = useRouter()
+const activityStore = useActivityStore()
 
 const isLoading = ref<boolean>(false)
 const hasError = ref<boolean>(false)
@@ -59,11 +68,59 @@ const form = reactive<UpdateEmployeePayload>({
   first_name: '',
   last_name: '',
   phone_number: '',
-  max_weekly_hours: 40,
   active: true,
 })
 
-const activityStore = useActivityStore()
+const contractForm = reactive<EditableContractPayload>({
+  weekly_hours: 40,
+  daily_hours: 8,
+  min_days_off_per_week: 2,
+  work_monday: true,
+  work_tuesday: true,
+  work_wednesday: true,
+  work_thursday: true,
+  work_friday: true,
+  work_saturday: false,
+  work_sunday: false,
+  has_fixed_schedule: false,
+  preferred_start_time: null,
+  preferred_end_time: null,
+  active: true,
+  start_date: null,
+  end_date: null,
+})
+
+const originalContract = ref<EditableContractPayload | null>(null)
+
+function normalizeContract(contract: EditableContractPayload): EditableContractPayload {
+  return {
+    weekly_hours: contract.weekly_hours,
+    daily_hours: contract.daily_hours,
+    min_days_off_per_week: contract.min_days_off_per_week,
+    work_monday: contract.work_monday,
+    work_tuesday: contract.work_tuesday,
+    work_wednesday: contract.work_wednesday,
+    work_thursday: contract.work_thursday,
+    work_friday: contract.work_friday,
+    work_saturday: contract.work_saturday,
+    work_sunday: contract.work_sunday,
+    has_fixed_schedule: contract.has_fixed_schedule,
+    preferred_start_time: contract.has_fixed_schedule ? contract.preferred_start_time : null,
+    preferred_end_time: contract.has_fixed_schedule ? contract.preferred_end_time : null,
+    active: true,
+    start_date: contract.start_date || null,
+    end_date: contract.end_date || null,
+  }
+}
+
+function hasContractChanged(contract: EditableContractPayload): boolean {
+  if (!originalContract.value) {
+    return true
+  }
+
+  return JSON.stringify(normalizeContract(originalContract.value)) !==
+    JSON.stringify(normalizeContract(contract))
+}
 
 async function loadEmployee(): Promise<void> {
   isLoading.value = true
@@ -71,13 +128,54 @@ async function loadEmployee(): Promise<void> {
 
   try {
     const employeeId = Number(route.params.id)
-    const employee = await getEmployeeById(employeeId)
+
+    const [employee, activeContract] = await Promise.all([
+      getEmployeeById(employeeId),
+      getActiveContractByEmployee(employeeId),
+    ])
 
     form.first_name = employee.first_name
     form.last_name = employee.last_name
     form.phone_number = employee.phone_number
-    form.max_weekly_hours = employee.max_weekly_hours
     form.active = employee.active
+
+    if (activeContract) {
+      contractForm.weekly_hours = activeContract.weekly_hours
+      contractForm.daily_hours = activeContract.daily_hours
+      contractForm.min_days_off_per_week = activeContract.min_days_off_per_week
+      contractForm.work_monday = activeContract.work_monday
+      contractForm.work_tuesday = activeContract.work_tuesday
+      contractForm.work_wednesday = activeContract.work_wednesday
+      contractForm.work_thursday = activeContract.work_thursday
+      contractForm.work_friday = activeContract.work_friday
+      contractForm.work_saturday = activeContract.work_saturday
+      contractForm.work_sunday = activeContract.work_sunday
+      contractForm.has_fixed_schedule = activeContract.has_fixed_schedule
+      contractForm.preferred_start_time = activeContract.preferred_start_time
+      contractForm.preferred_end_time = activeContract.preferred_end_time
+      contractForm.active = true
+      contractForm.start_date = activeContract.start_date
+      contractForm.end_date = activeContract.end_date
+
+      originalContract.value = normalizeContract({
+        weekly_hours: activeContract.weekly_hours,
+        daily_hours: activeContract.daily_hours,
+        min_days_off_per_week: activeContract.min_days_off_per_week,
+        work_monday: activeContract.work_monday,
+        work_tuesday: activeContract.work_tuesday,
+        work_wednesday: activeContract.work_wednesday,
+        work_thursday: activeContract.work_thursday,
+        work_friday: activeContract.work_friday,
+        work_saturday: activeContract.work_saturday,
+        work_sunday: activeContract.work_sunday,
+        has_fixed_schedule: activeContract.has_fixed_schedule,
+        preferred_start_time: activeContract.preferred_start_time,
+        preferred_end_time: activeContract.preferred_end_time,
+        active: true,
+        start_date: activeContract.start_date,
+        end_date: activeContract.end_date,
+      })
+    }
   } catch {
     hasError.value = true
   } finally {
@@ -85,13 +183,30 @@ async function loadEmployee(): Promise<void> {
   }
 }
 
-async function handleSubmit(payload: UpdateEmployeePayload): Promise<void> {
+async function handleSubmit(payload: {
+  employee: UpdateEmployeePayload
+  contract: EditableContractPayload
+}): Promise<void> {
   isSubmitting.value = true
   errorMessage.value = ''
 
   try {
     const employeeId = Number(route.params.id)
-    await updateEmployee(employeeId, payload)
+
+    await updateEmployee(employeeId, payload.employee)
+
+    if (hasContractChanged(payload.contract)) {
+      await createContract({
+        employee_id: employeeId,
+        ...normalizeContract(payload.contract),
+      })
+    }
+
+    activityStore.addActivity(
+      `${form.first_name} ${form.last_name}`,
+      'Employee updated',
+    )
+
     await router.push({ name: 'employees' })
   } catch (error: unknown) {
     errorMessage.value = getBackendErrorMessage(
@@ -99,10 +214,6 @@ async function handleSubmit(payload: UpdateEmployeePayload): Promise<void> {
       'Unable to update employee. Please review the form and try again.',
     )
   } finally {
-    activityStore.addActivity(
-      `${form.first_name} ${form.last_name}`,
-      'Employee updated'
-    )
     isSubmitting.value = false
   }
 }
