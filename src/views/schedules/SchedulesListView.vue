@@ -169,17 +169,28 @@
                     </RouterLink>
 
                     <button
-                      v-if="isAdmin"
+                      v-if="isAdmin && schedule.status !== 'published'"
                       type="button"
                       class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
                       :disabled="generatingScheduleId === schedule.id"
-                      @click="handleGenerate(schedule.id)"
+                      @click="handleGenerate(schedule)"
                     >
                       {{
                         generatingScheduleId === schedule.id
                           ? 'Generating...'
-                          : 'Generate planning'
+                          : schedule.status === 'generated'
+                            ? 'Regenerate planning'
+                            : 'Generate planning'
                       }}
+                    </button>
+                    <button
+                      v-if="isAdmin && schedule.status === 'generated'"
+                      type="button"
+                      class="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                      :disabled="publishingScheduleId === schedule.id"
+                      @click="handlePublish(schedule)"
+                    >
+                      {{ publishingScheduleId === schedule.id ? 'Publishing...' : 'Publish' }}
                     </button>
                   </div>
                 </td>
@@ -224,9 +235,12 @@ import FiltersPanel from '../../components/filters/FiltersPanel.vue'
 import SchedulesCalendar from '../../components/schedules/SchedulesCalendar.vue'
 import {
   generatePlanning,
+  getScheduleById,
   getSchedules,
+  updateSchedule,
   type Schedule,
 } from '../../api/schedules'
+import { useActivityStore } from '../../stores/activity'
 import { getBackendErrorMessage } from '../../utils/api'
 import { useAuthStore } from '../../stores/auth'
 
@@ -241,6 +255,8 @@ const hasError = ref<boolean>(false)
 const generatingScheduleId = ref<number | null>(null)
 const tableMessage = ref<string>('')
 const tableErrorMessage = ref<string>('')
+const activityStore = useActivityStore()
+const publishingScheduleId = ref<number | null>(null)
 
 const selectedStartDate = ref<string>('')
 const selectedEndDate = ref<string>('')
@@ -308,14 +324,61 @@ async function loadSchedules(): Promise<void> {
   }
 }
 
-async function handleGenerate(scheduleId: number): Promise<void> {
-  generatingScheduleId.value = scheduleId
+async function canGeneratePlanning(scheduleId: number): Promise<boolean> {
+  const scheduleDetail = await getScheduleById(scheduleId)
+
+  if (scheduleDetail.shifts.length === 0) {
+    tableErrorMessage.value =
+      'Planning cannot be generated because this schedule has no shifts.'
+    return false
+  }
+
+  return true
+}
+
+async function canPublishSchedule(scheduleId: number): Promise<boolean> {
+  const scheduleDetail = await getScheduleById(scheduleId)
+
+  const hasEmptyShifts = scheduleDetail.shifts.some(
+    (shift) => shift.assignments.length === 0,
+  )
+
+  if (hasEmptyShifts) {
+    tableErrorMessage.value =
+      'Schedule cannot be published because there are shifts without assigned employees.'
+    return false
+  }
+
+  return true
+}
+
+async function handleGenerate(schedule: Schedule): Promise<void> {
+  generatingScheduleId.value = schedule.id
   tableMessage.value = ''
   tableErrorMessage.value = ''
 
   try {
-    await generatePlanning(scheduleId, { employees_per_shift: 1 })
-    tableMessage.value = 'Planning generated successfully.'
+    const canGenerate = await canGeneratePlanning(schedule.id)
+
+    if (!canGenerate) {
+      return
+    }
+
+    const result = await generatePlanning(schedule.id)
+
+    await updateSchedule(schedule.id, {
+      status: 'generated',
+    })
+
+    activityStore.addActivity(
+      `${formatDate(schedule.start_date)} - ${formatDate(schedule.end_date)}`,
+      schedule.status === 'generated'
+        ? 'Planning regenerated'
+        : 'Planning generated',
+    )
+
+    tableMessage.value = result.message || 'Planning generated successfully.'
+    await loadSchedules()
   } catch (error: unknown) {
     tableErrorMessage.value = getBackendErrorMessage(
       error,
@@ -323,6 +386,47 @@ async function handleGenerate(scheduleId: number): Promise<void> {
     )
   } finally {
     generatingScheduleId.value = null
+  }
+}
+
+async function handlePublish(schedule: Schedule): Promise<void> {
+  const canPublish = await canPublishSchedule(schedule.id)
+
+  if (!canPublish) {
+    return
+  }
+  
+  const confirmed = window.confirm(
+    'The schedule status will change to published and planning cannot be regenerated. Are you sure you want to continue?',
+  )
+
+  if (!confirmed) {
+    return
+  }
+
+  publishingScheduleId.value = schedule.id
+  tableMessage.value = ''
+  tableErrorMessage.value = ''
+
+  try {
+    await updateSchedule(schedule.id, {
+      status: 'published',
+    })
+
+    activityStore.addActivity(
+      `${formatDate(schedule.start_date)} - ${formatDate(schedule.end_date)}`,
+      'Schedule published',
+    )
+
+    tableMessage.value = 'Schedule published successfully.'
+    await loadSchedules()
+  } catch (error: unknown) {
+    tableErrorMessage.value = getBackendErrorMessage(
+      error,
+      'Unable to publish schedule. Please try again.',
+    )
+  } finally {
+    publishingScheduleId.value = null
   }
 }
 

@@ -1,29 +1,32 @@
 import apiClient from './axios'
+export type ScheduleStatus = 'draft' | 'generated' | 'published'
 
 export interface Schedule {
   id: number
   start_date: string
   end_date: string
-  status: string
+  status: ScheduleStatus
   created_at: string
 }
-
 export interface CreateSchedulePayload {
   start_date: string
   end_date: string
-  status: string
+  status: 'draft'
 }
 
 export interface UpdateSchedulePayload {
   start_date?: string
   end_date?: string
-  status?: string
+  status?: ScheduleStatus
 }
 
-export interface GeneratePlanningPayload {
-  employees_per_shift?: number
+export interface GeneratePlanningResponse {
+  message: string
+  assignments_created: unknown[]
+  unfilled_shifts: unknown[]
+  employees_below_target: unknown[]
+  missing_contract_hours_total: number
 }
-
 export interface ScheduleDetailEmployee {
   id: number
   first_name: string
@@ -83,7 +86,10 @@ export async function deleteSchedule(id: number): Promise<void> {
 
 export async function generatePlanning(
   scheduleId: number,
-  payload: GeneratePlanningPayload,
-): Promise<void> {
-  await apiClient.post(`/planning/generate/${scheduleId}`, payload)
+): Promise<GeneratePlanningResponse> {
+  const response = await apiClient.post<GeneratePlanningResponse>(
+    `/planning/generate/${scheduleId}`,
+    {},
+  )
+  return response.data
 }
