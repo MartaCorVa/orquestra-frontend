@@ -12,12 +12,14 @@
                 for="start-date"
                 class="mb-2 block text-sm font-medium text-slate-700"
               >
-                Start date
+                Start date <span class="text-red-500">*</span>
               </label>
               <input
                 id="start-date"
                 v-model="form.start_date"
                 type="date"
+                required
+                :max="form.end_date || undefined"
                 class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-600"
                 :disabled="isSubmitting"
               />
@@ -28,34 +30,17 @@
                 for="end-date"
                 class="mb-2 block text-sm font-medium text-slate-700"
               >
-                End date
+                End date <span class="text-red-500">*</span>
               </label>
               <input
                 id="end-date"
                 v-model="form.end_date"
                 type="date"
+                required
+                :min="form.start_date || undefined"
                 class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-600"
                 :disabled="isSubmitting"
               />
-            </div>
-
-            <div class="md:col-span-2">
-              <label
-                for="status"
-                class="mb-2 block text-sm font-medium text-slate-700"
-              >
-                Status
-              </label>
-              <select
-                id="status"
-                v-model="form.status"
-                class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-600"
-                :disabled="isSubmitting"
-              >
-                <option value="draft">draft</option>
-                <option value="active">active</option>
-                <option value="completed">completed</option>
-              </select>
             </div>
           </div>
 
@@ -89,12 +74,13 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 
 import AppShell from '../../components/layout/AppShell.vue'
 import { createSchedule, type CreateSchedulePayload } from '../../api/schedules'
 import { getBackendErrorMessage } from '../../utils/api'
+import { useActivityStore } from '../../stores/activity'
 
 const router = useRouter()
 
@@ -106,13 +92,58 @@ const form = reactive<CreateSchedulePayload>({
 
 const isSubmitting = ref<boolean>(false)
 const errorMessage = ref<string>('')
+const activityStore = useActivityStore()
 
-async function handleSubmit(): Promise<void> {
-  isSubmitting.value = true
+const isInvalidDateRange = computed(() => {
+  if (!form.start_date || !form.end_date) {
+    return false
+  }
+
+  return form.start_date > form.end_date
+})
+
+function validateForm(): boolean {
   errorMessage.value = ''
 
+  if (!form.start_date) {
+    errorMessage.value = 'Start date is required.'
+    return false
+  }
+
+  if (!form.end_date) {
+    errorMessage.value = 'End date is required.'
+    return false
+  }
+
+  if (isInvalidDateRange.value) {
+    errorMessage.value = 'Start date cannot be later than end date.'
+    return false
+  }
+
+  return true
+}
+
+async function handleSubmit(): Promise<void> {
+  errorMessage.value = ''
+
+  if (!validateForm()) {
+    return
+  }
+
+  isSubmitting.value = true
+
   try {
-    const schedule = await createSchedule(form)
+    const schedule = await createSchedule({
+      start_date: form.start_date,
+      end_date: form.end_date,
+      status: 'draft',
+    })
+
+    activityStore.addActivity(
+      `${form.start_date} - ${form.end_date}`,
+      'Schedule created',
+    )
+
     await router.push({ name: 'schedule-detail', params: { id: schedule.id } })
   } catch (error: unknown) {
     errorMessage.value = getBackendErrorMessage(

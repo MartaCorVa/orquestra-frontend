@@ -21,13 +21,28 @@
           </RouterLink>
 
           <button
-            v-if="isAdmin"
+            v-if="isAdmin && schedule?.status !== 'published'"
             type="button"
             class="rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-70"
             :disabled="isGenerating"
             @click="handleGenerate"
           >
-            {{ isGenerating ? 'Generating...' : 'Generate planning' }}
+            {{
+              isGenerating
+                ? 'Generating...'
+                : schedule?.status === 'generated'
+                  ? 'Regenerate planning'
+                  : 'Generate planning'
+            }}
+          </button>
+          <button
+            v-if="isAdmin && schedule?.status === 'generated'"
+            type="button"
+            class="rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-70"
+            :disabled="isPublishing"
+            @click="handlePublish"
+          >
+            {{ isPublishing ? 'Publishing...' : 'Publish schedule' }}
           </button>
         </div>
       </div>
@@ -89,8 +104,10 @@ import { useAuthStore } from '../../stores/auth'
 import {
   generatePlanning,
   getScheduleById,
+  updateSchedule,
   type ScheduleDetail,
 } from '../../api/schedules'
+import { useActivityStore } from '../../stores/activity'
 import { getBackendErrorMessage } from '../../utils/api'
 
 interface SummaryCard {
@@ -113,6 +130,8 @@ const hasError = ref<boolean>(false)
 const isGenerating = ref<boolean>(false)
 const message = ref<string>('')
 const errorMessage = ref<string>('')
+const activityStore = useActivityStore()
+const isPublishing = ref<boolean>(false)
 
 const summaryCards = computed<SummaryCard[]>(() => {
   if (!schedule.value) {
@@ -158,14 +177,69 @@ async function loadScheduleDetail(): Promise<void> {
   }
 }
 
+function canGeneratePlanning(): boolean {
+  if (!schedule.value) {
+    return false
+  }
+
+  if (schedule.value.shifts.length === 0) {
+    errorMessage.value =
+      'Planning cannot be generated because this schedule has no shifts.'
+    return false
+  }
+
+  return true
+}
+
+function canPublishSchedule(): boolean {
+  if (!schedule.value) {
+    return false
+  }
+
+  const hasEmptyShifts = schedule.value.shifts.some(
+    (shift) => shift.assignments.length === 0,
+  )
+
+  if (hasEmptyShifts) {
+    errorMessage.value =
+      'Schedule cannot be published because there are shifts without assigned employees.'
+    return false
+  }
+
+  return true
+}
+
 async function handleGenerate(): Promise<void> {
+  message.value = ''
+  errorMessage.value = ''
+
+  if (!canGeneratePlanning()) {
+    return
+  }
+
+  if (!schedule.value) {
+    return
+  }
+
   isGenerating.value = true
   message.value = ''
   errorMessage.value = ''
 
   try {
-    await generatePlanning(scheduleId.value, { employees_per_shift: 1 })
-    message.value = 'Planning generated successfully.'
+    const result = await generatePlanning(scheduleId.value)
+
+    await updateSchedule(scheduleId.value, {
+      status: 'generated',
+    })
+
+    activityStore.addActivity(
+      `${formatDate(schedule.value.start_date)} - ${formatDate(schedule.value.end_date)}`,
+      schedule.value.status === 'generated'
+        ? 'Planning regenerated'
+        : 'Planning generated',
+    )
+
+    message.value = result.message || 'Planning generated successfully.'
     await loadScheduleDetail()
   } catch (error: unknown) {
     errorMessage.value = getBackendErrorMessage(
@@ -174,6 +248,52 @@ async function handleGenerate(): Promise<void> {
     )
   } finally {
     isGenerating.value = false
+  }
+}
+
+async function handlePublish(): Promise<void> {
+  message.value = ''
+  errorMessage.value = ''
+
+  if (!canPublishSchedule()) {
+    return
+  }
+  
+  if (!schedule.value) {
+    return
+  }
+
+  const confirmed = window.confirm(
+    'The schedule status will change to published and planning cannot be regenerated. Are you sure you want to continue?',
+  )
+
+  if (!confirmed) {
+    return
+  }
+
+  isPublishing.value = true
+  message.value = ''
+  errorMessage.value = ''
+
+  try {
+    await updateSchedule(scheduleId.value, {
+      status: 'published',
+    })
+
+    activityStore.addActivity(
+      `${formatDate(schedule.value.start_date)} - ${formatDate(schedule.value.end_date)}`,
+      'Schedule published',
+    )
+
+    message.value = 'Schedule published successfully.'
+    await loadScheduleDetail()
+  } catch (error: unknown) {
+    errorMessage.value = getBackendErrorMessage(
+      error,
+      'Unable to publish schedule. Please try again.',
+    )
+  } finally {
+    isPublishing.value = false
   }
 }
 
