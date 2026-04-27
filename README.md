@@ -253,21 +253,75 @@ The application includes a module for managing shifts associated with schedules.
 
 ### Create and edit shifts
 
-* Unified form for both creation and edition  
+The application supports both **single shift creation** and **recurrent shift creation**.
+
+#### Single shift
+
+* Create or edit an individual shift
 * Fields:
-  * date  
-  * start time  
-  * end time  
-  * schedule  
-  * creation type (`manual` / `automatic`)  
-  * status (`planned`, `assigned`, `pending`)  
+  * start date & time
+  * end date & time
+  * schedule
+  * employee (optional)
+  * creation type (`manual` / `automatic`)
+  * status (`planned`, `assigned`)
+
+---
+
+#### Recurrent shift creation
+
+Allows bulk creation of shifts across a date range.
+
+* Define:
+  * start date
+  * end date
+  * start time
+  * end time
+  * selected weekdays (e.g., Monday–Friday)
+* Optionally assign an employee
+
+##### Behavior
+
+* For each valid day:
+  * If no shift exists → a new shift is created
+  * If a shift already exists:
+    * no duplicate is created
+    * the employee is assigned to the existing shift (if provided)
+
+* Duplicate assignments are prevented automatically
+
+---
 
 ### Validation
 
-* Ensures that:
-  * end time is strictly greater than start time  
-* Prevents submission of invalid time ranges  
-* Displays validation errors directly in the UI  
+Validation is handled at **two levels**:
+
+#### Frontend validation
+
+* Required fields must be filled before submission
+* Validation errors are shown only when the user submits the form
+* Errors are displayed clearly in the UI (red feedback messages)
+
+#### Rules enforced
+
+* End datetime must be later than start datetime
+* Start date cannot be later than end date
+* At least one weekday must be selected (recurrent shifts)
+
+---
+
+#### Backend validation (also enforced)
+
+* Shift must belong to the selected schedule
+* No overlapping shifts for the same employee
+* Minimum rest period between shifts
+* Contract constraints:
+  * allowed working days
+  * daily and weekly hours
+  * minimum days off
+  * fixed schedule constraints
+
+If any rule is violated, errors are returned and displayed in the UI.
 
 ---
 
