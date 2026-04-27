@@ -49,6 +49,37 @@
           </select>
         </div>
 
+        <p
+          v-if="selectedSchedule"
+          class="md:col-span-2 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-700"
+        >
+          Schedule range:
+          {{ formatDate(selectedSchedule.start_date) }} -
+          {{ formatDate(selectedSchedule.end_date) }}
+        </p>
+
+        <p
+          v-if="isLoadingContract"
+          class="md:col-span-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500"
+        >
+          Loading active contract...
+        </p>
+
+        <div
+          v-else-if="activeContract"
+          class="md:col-span-2 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
+        >
+          <p class="font-medium">Active contract loaded</p>
+          <p class="mt-1">
+            {{ activeContract.weekly_hours }}h/week ·
+            {{ activeContract.daily_hours }}h/day
+            <span v-if="activeContract.has_fixed_schedule">
+              · {{ activeContract.preferred_start_time }} -
+              {{ activeContract.preferred_end_time }}
+            </span>
+          </p>
+        </div>
+
         <div>
           <label
             for="start-date"
@@ -60,6 +91,8 @@
             id="start-date"
             v-model="localForm.start_date"
             type="date"
+            :min="selectedSchedule?.start_date"
+            :max="selectedSchedule?.end_date"
             class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-600"
             :disabled="isSubmitting"
           />
@@ -76,6 +109,8 @@
             id="end-date"
             v-model="localForm.end_date"
             type="date"
+            :min="selectedSchedule?.start_date"
+            :max="selectedSchedule?.end_date"
             class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-600"
             :disabled="isSubmitting"
           />
@@ -191,6 +226,8 @@ import dayjs from 'dayjs'
 
 import type { Schedule } from '../../api/schedules'
 import type { CreateShiftPayload } from '../../api/shifts'
+import type { Contract } from '../../api/contracts'
+import { getActiveContractByEmployee } from '../../api/contracts'
 
 interface EmployeeOption {
   id: number
@@ -220,6 +257,8 @@ interface Props {
 
 const props = defineProps<Props>()
 const localError = ref<string>('')
+const activeContract = ref<Contract | null>(null)
+const isLoadingContract = ref<boolean>(false)
 
 const emit = defineEmits<{
   submit: [payload: CreateShiftPayload]
@@ -235,6 +274,10 @@ const localForm = reactive<ShiftFormState>({
   status: props.form.status,
   schedule_id: props.form.schedule_id,
 })
+
+const selectedSchedule = computed<Schedule | undefined>(() =>
+  props.schedules.find((schedule) => schedule.id === localForm.schedule_id),
+)
 
 const validationMessage = computed<string>(() => {
   if (!localForm.schedule_id) {
@@ -255,6 +298,15 @@ const validationMessage = computed<string>(() => {
 
   if (!localForm.end_time) {
     return 'End time is required.'
+  }
+
+  if (selectedSchedule.value) {
+    if (
+      localForm.start_date < selectedSchedule.value.start_date ||
+      localForm.end_date > selectedSchedule.value.end_date
+    ) {
+      return 'Shift dates must be within the selected schedule range.'
+    }
   }
 
   const start = dayjs(`${localForm.start_date}T${localForm.start_time}`)
@@ -285,6 +337,48 @@ watch(
   },
   { deep: true },
 )
+
+watch(
+  () => localForm.employee_id,
+  async (employeeId) => {
+    activeContract.value = null
+
+    if (!employeeId) {
+      return
+    }
+
+    isLoadingContract.value = true
+    localError.value = ''
+
+    try {
+      const contract = await getActiveContractByEmployee(employeeId)
+      applyContractToForm(contract)
+    } catch {
+      localError.value = 'Unable to load the active contract for the selected employee.'
+    } finally {
+      isLoadingContract.value = false
+    }
+  },
+)
+
+watch(
+  localForm,
+  () => {
+    if (localError.value) {
+      localError.value = ''
+    }
+  },
+  { deep: true },
+)
+
+function applyContractToForm(contract: Contract): void {
+  activeContract.value = contract
+
+  if (contract.has_fixed_schedule) {
+    localForm.start_time = contract.preferred_start_time ?? localForm.start_time
+    localForm.end_time = contract.preferred_end_time ?? localForm.end_time
+  }
+}
 
 function formatDate(value: string): string {
   return dayjs(value).format('DD/MM/YYYY')
@@ -319,14 +413,4 @@ function handleSubmit(): void {
     employee_id: localForm.employee_id,
   })
 }
-
-watch(
-  localForm,
-  () => {
-    if (localError.value) {
-      localError.value = ''
-    }
-  },
-  { deep: true },
-)
 </script>

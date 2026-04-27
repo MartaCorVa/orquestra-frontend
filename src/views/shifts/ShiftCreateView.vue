@@ -4,9 +4,7 @@
     subtitle="Create a single shift or repeated shifts linked to a schedule."
   >
     <section class="mx-auto max-w-4xl space-y-6">
-      <div
-        class="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm"
-      >
+      <div class="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
         <div class="inline-flex rounded-2xl border border-slate-200 bg-slate-100 p-1">
           <button
             type="button"
@@ -148,7 +146,8 @@ async function loadSchedules(): Promise<void> {
   isLoadingSchedules.value = true
 
   try {
-    schedules.value = await getSchedules()
+    const schedulesData = await getSchedules()
+    schedules.value = schedulesData.filter((schedule) => schedule.status !== 'published')
 
     if (schedules.value.length > 0) {
       if (form.schedule_id === 0) {

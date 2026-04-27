@@ -48,9 +48,9 @@ export async function getContractsByEmployee(employeeId: number): Promise<Contra
   return response.data
 }
 
-export async function getActiveContractByEmployee(employeeId: number): Promise<Contract | null> {
-  const contracts = await getContractsByEmployee(employeeId)
-  return contracts.find((contract) => contract.active) ?? null
+export async function getActiveContractByEmployee(employeeId: number): Promise<Contract> {
+  const response = await apiClient.get<Contract>(`/contracts/employee/${employeeId}/active`)
+  return response.data
 }
 
 export async function createContract(payload: CreateContractPayload): Promise<Contract> {
