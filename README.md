@@ -448,7 +448,7 @@ POST /planning/generate/{schedule_id}
 
 ## 📊 Equity analysis (metrics)
 
-The application includes a dedicated module for analyzing workload distribution and fairness.
+The application includes a dedicated module for analyzing contract-based workload distribution and fairness.
 
 ### Structure
 
@@ -461,7 +461,7 @@ The module is organized into two tabs:
 
 ### Fairness by schedule
 
-Analyzes how workload is distributed within a specific schedule.
+Analyzes how workload is distributed within a specific schedule based on employee contracts.
 
 #### Features
 
@@ -470,22 +470,24 @@ Analyzes how workload is distributed within a specific schedule.
 * Automatic loading of fairness data  
 * Summary metrics:
   * total assigned hours  
-  * max assigned hours  
-  * min assigned hours  
-  * hours gap  
+  * max workload percentage
+  * min workload percentage
+  * workload percentage gap
 
 #### Visualization
 
 * Horizontal bars per employee  
-* Relative workload distribution  
-* Percentage and assigned hours  
+* Contract-based workload distribution
+* Percentage of workload relative to contract hours
+* Assigned hours displayed alongside percentages
 
 #### Insights
 
-* Detects whether planning is balanced  
+* Detects whether planning is balanced based on workload percentage
 * Highlights:
-  * highest workload employee  
-  * lowest workload employee  
+  * employee with highest workload percentage
+  * employee with lowest workload percentage
+* Helps identify over- and under-utilization relative to contracts
 
 ---
 
@@ -510,6 +512,7 @@ Analyzes workload across a custom time period.
 * Per employee:
   * assigned hours  
   * workload percentage  
+  * contract weekly hours reference  
   * horizontal distribution bars  
 
 ---

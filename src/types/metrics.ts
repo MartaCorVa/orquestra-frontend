@@ -2,7 +2,7 @@ export interface EmployeeFairnessMetric {
   employee_id: number
   employee_name: string
   assigned_hours: number
-  max_weekly_hours: number
+  contract_weekly_hours: number
   workload_percentage: number
 }
 
@@ -13,13 +13,16 @@ export interface ScheduleFairnessResponse {
   max_assigned_hours: number
   min_assigned_hours: number
   hours_gap: number
+  max_workload_percentage: number
+  min_workload_percentage: number
+  workload_percentage_gap: number
 }
 
 export interface EmployeeWorkloadMetric {
   employee_id: number
   employee_name: string
   assigned_hours: number
-  max_weekly_hours: number
+  contract_weekly_hours: number
   workload_percentage: number
 }
 
