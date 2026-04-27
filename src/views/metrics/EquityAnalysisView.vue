@@ -48,7 +48,7 @@
               <div>
                 <h2 class="text-xl font-semibold text-slate-900">Fairness by schedule</h2>
                 <p class="text-sm text-slate-500">
-                  Compare assigned hours within a selected schedule.
+                  Compare workload percentages based on contract hours within a selected schedule.
                 </p>
               </div>
             </div>
@@ -101,9 +101,9 @@
 
             <div class="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
               <section class="rounded-3xl border border-slate-200 bg-slate-50 p-6">
-                <h3 class="text-lg font-semibold text-slate-900">Hours by employee</h3>
+                <h3 class="text-lg font-semibold text-slate-900">Workload by employee</h3>
                 <p class="mt-1 text-sm text-slate-500">
-                  Relative workload distribution within the schedule.
+                  Contract-based workload distribution within the schedule.
                 </p>
 
                 <div class="mt-6 space-y-4">
@@ -117,14 +117,14 @@
                         {{ employee.employee_name }}
                       </p>
                       <p class="mt-1 text-xs text-slate-500">
-                        Max {{ employee.max_weekly_hours }}h
+                        Contract {{ employee.contract_weekly_hours }}h
                       </p>
                     </div>
 
                     <div class="h-4 overflow-hidden rounded-full bg-slate-200">
                       <div
                         class="h-full rounded-full bg-blue-600"
-                        :style="{ width: `${getFairnessBarWidth(employee.assigned_hours)}%` }"
+                        :style="{ width: `${getFairnessBarWidth(employee.workload_percentage)}%` }"
                       />
                     </div>
 
@@ -263,7 +263,7 @@
                     {{ employee.employee_name }}
                   </p>
                   <p class="mt-1 text-xs text-slate-500">
-                    Max {{ employee.max_weekly_hours }}h
+                    Contract {{ employee.contract_weekly_hours }}h
                   </p>
                 </div>
 
@@ -365,16 +365,16 @@ const summaryCards = computed<SummaryCard[]>(() => {
       value: `${fairnessData.value.total_assigned_hours}h`,
     },
     {
-      label: 'Max assigned hours',
-      value: `${fairnessData.value.max_assigned_hours}h`,
+      label: 'Max workload',
+      value: `${fairnessData.value.max_workload_percentage.toFixed(1)}%`,
     },
     {
-      label: 'Min assigned hours',
-      value: `${fairnessData.value.min_assigned_hours}h`,
+      label: 'Min workload',
+      value: `${fairnessData.value.min_workload_percentage.toFixed(1)}%`,
     },
     {
-      label: 'Hours gap',
-      value: `${fairnessData.value.hours_gap}h`,
+      label: 'Workload gap',
+      value: `${fairnessData.value.workload_percentage_gap.toFixed(1)}%`,
     },
   ]
 })
@@ -385,23 +385,25 @@ const insights = computed<InsightItem[]>(() => {
   }
 
   const employees = fairnessData.value.employees
+
   const highest = [...employees].sort(
     (firstEmployee, secondEmployee) =>
-      secondEmployee.assigned_hours - firstEmployee.assigned_hours,
-  )[0]
-  const lowest = [...employees].sort(
-    (firstEmployee, secondEmployee) =>
-      firstEmployee.assigned_hours - secondEmployee.assigned_hours,
+      secondEmployee.workload_percentage - firstEmployee.workload_percentage,
   )[0]
 
-  const isBalanced = fairnessData.value.hours_gap <= 4
+  const lowest = [...employees].sort(
+    (firstEmployee, secondEmployee) =>
+      firstEmployee.workload_percentage - secondEmployee.workload_percentage,
+  )[0]
+
+  const isBalanced = fairnessData.value.workload_percentage_gap <= 20
 
   return [
     {
-      title: isBalanced ? 'Balanced planning' : 'Uneven distribution',
+      title: isBalanced ? 'Balanced workload' : 'Uneven workload',
       description: isBalanced
-        ? 'The hours gap is low, which suggests a relatively fair allocation.'
-        : 'The difference between the highest and lowest assigned hours should be reviewed.',
+        ? 'The workload percentage gap is low, which suggests a relatively fair allocation based on contract hours.'
+        : 'The difference between the highest and lowest workload percentage should be reviewed.',
       badge: isBalanced ? 'Good' : 'Review',
       badgeClass: isBalanced
         ? 'bg-emerald-100 text-emerald-700'
@@ -409,14 +411,14 @@ const insights = computed<InsightItem[]>(() => {
     },
     {
       title: 'Highest workload',
-      description: `${highest.employee_name} has the highest assigned workload with ${highest.assigned_hours}h.`,
-      badge: `${highest.assigned_hours}h`,
+      description: `${highest.employee_name} has the highest workload at ${highest.workload_percentage.toFixed(1)}% of contract hours.`,
+      badge: `${highest.workload_percentage.toFixed(1)}%`,
       badgeClass: 'bg-blue-100 text-blue-700',
     },
     {
       title: 'Lowest workload',
-      description: `${lowest.employee_name} has the lowest assigned workload with ${lowest.assigned_hours}h.`,
-      badge: `${lowest.assigned_hours}h`,
+      description: `${lowest.employee_name} has the lowest workload at ${lowest.workload_percentage.toFixed(1)}% of contract hours.`,
+      badge: `${lowest.workload_percentage.toFixed(1)}%`,
       badgeClass: 'bg-slate-100 text-slate-700',
     },
   ]
@@ -440,12 +442,8 @@ function getCurrentWeekRange(): { start: string; end: string } {
   }
 }
 
-function getFairnessBarWidth(assignedHours: number): number {
-  if (!fairnessData.value || fairnessData.value.max_assigned_hours === 0) {
-    return 0
-  }
-
-  return (assignedHours / fairnessData.value.max_assigned_hours) * 100
+function getFairnessBarWidth(workloadPercentage: number): number {
+  return Math.max(0, Math.min(workloadPercentage, 100))
 }
 
 function getWorkloadBarWidth(workloadPercentage: number): number {
