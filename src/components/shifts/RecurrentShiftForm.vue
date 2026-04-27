@@ -3,10 +3,7 @@
     <form class="space-y-6" @submit.prevent="handleSubmit">
       <div class="grid gap-6 md:grid-cols-2">
         <div>
-          <label
-            for="employee-id"
-            class="mb-2 block text-sm font-medium text-slate-700"
-          >
+          <label for="employee-id" class="mb-2 block text-sm font-medium text-slate-700">
             Employee
           </label>
           <select
@@ -27,15 +24,13 @@
         </div>
 
         <div>
-          <label
-            for="schedule-id"
-            class="mb-2 block text-sm font-medium text-slate-700"
-          >
+          <label for="schedule-id" class="mb-2 block text-sm font-medium text-slate-700">
             Schedule <span class="text-red-500">*</span>
           </label>
           <select
             id="schedule-id"
             v-model.number="localForm.schedule_id"
+            required
             class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-600"
             :disabled="isSubmitting"
           >
@@ -50,74 +45,65 @@
         </div>
 
         <div>
-          <label
-            for="start-date"
-            class="mb-2 block text-sm font-medium text-slate-700"
-          >
+          <label for="start-date" class="mb-2 block text-sm font-medium text-slate-700">
             Start date <span class="text-red-500">*</span>
           </label>
           <input
             id="start-date"
             v-model="localForm.start_date"
             type="date"
+            required
+            :max="localForm.end_date || undefined"
             class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-600"
             :disabled="isSubmitting"
           />
         </div>
 
         <div>
-          <label
-            for="end-date"
-            class="mb-2 block text-sm font-medium text-slate-700"
-          >
+          <label for="end-date" class="mb-2 block text-sm font-medium text-slate-700">
             End date <span class="text-red-500">*</span>
           </label>
           <input
             id="end-date"
             v-model="localForm.end_date"
             type="date"
+            required
+            :min="localForm.start_date || undefined"
             class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-600"
             :disabled="isSubmitting"
           />
         </div>
 
         <div>
-          <label
-            for="start-time"
-            class="mb-2 block text-sm font-medium text-slate-700"
-          >
+          <label for="start-time" class="mb-2 block text-sm font-medium text-slate-700">
             Start time <span class="text-red-500">*</span>
           </label>
           <input
             id="start-time"
             v-model="localForm.start_time"
             type="time"
+            required
             class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-600"
             :disabled="isSubmitting"
           />
         </div>
 
         <div>
-          <label
-            for="end-time"
-            class="mb-2 block text-sm font-medium text-slate-700"
-          >
+          <label for="end-time" class="mb-2 block text-sm font-medium text-slate-700">
             End time <span class="text-red-500">*</span>
           </label>
           <input
             id="end-time"
             v-model="localForm.end_time"
             type="time"
+            required
             class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-600"
             :disabled="isSubmitting"
           />
         </div>
 
         <div>
-          <label
-            for="creation-type"
-            class="mb-2 block text-sm font-medium text-slate-700"
-          >
+          <label for="creation-type" class="mb-2 block text-sm font-medium text-slate-700">
             Creation type
           </label>
           <select
@@ -132,10 +118,7 @@
         </div>
 
         <div>
-          <label
-            for="status"
-            class="mb-2 block text-sm font-medium text-slate-700"
-          >
+          <label for="status" class="mb-2 block text-sm font-medium text-slate-700">
             Status
           </label>
           <select
@@ -149,6 +132,35 @@
           </select>
         </div>
       </div>
+
+      <div>
+        <p class="mb-3 text-sm font-medium text-slate-700">
+          Weekdays <span class="text-red-500">*</span>
+        </p>
+
+        <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
+          <label
+            v-for="weekday in weekdays"
+            :key="weekday.value"
+            class="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700"
+          >
+            <input
+              v-model="localForm.weekdays"
+              type="checkbox"
+              :value="weekday.value"
+              :disabled="isSubmitting"
+            />
+            <span>{{ weekday.label }}</span>
+          </label>
+        </div>
+      </div>
+
+      <p
+        v-if="validationMessage"
+        class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+      >
+        {{ validationMessage }}
+      </p>
 
       <p
         v-if="localError"
@@ -177,7 +189,7 @@
           class="rounded-xl bg-blue-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-70"
           :disabled="isSubmitting"
         >
-          {{ submitLabel }}
+          {{ isSubmitting ? 'Creating shifts...' : submitLabel }}
         </button>
       </div>
     </form>
@@ -190,7 +202,10 @@ import { RouterLink } from 'vue-router'
 import dayjs from 'dayjs'
 
 import type { Schedule } from '../../api/schedules'
-import type { CreateShiftPayload } from '../../api/shifts'
+import type {
+  CreateRecurrentShiftPayload,
+  Weekday,
+} from '../../api/shifts'
 
 interface EmployeeOption {
   id: number
@@ -198,19 +213,20 @@ interface EmployeeOption {
   last_name: string
 }
 
-interface ShiftFormState {
+interface RecurrentShiftFormState {
   employee_id: number | null
+  schedule_id: number
   start_date: string
-  start_time: string
   end_date: string
+  start_time: string
   end_time: string
+  weekdays: Weekday[]
   creation_type: string
   status: string
-  schedule_id: number
 }
 
 interface Props {
-  form: ShiftFormState
+  form: RecurrentShiftFormState
   schedules: Schedule[]
   employees: EmployeeOption[]
   isSubmitting: boolean
@@ -219,21 +235,31 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-const localError = ref<string>('')
 
 const emit = defineEmits<{
-  submit: [payload: CreateShiftPayload]
+  submit: [payload: CreateRecurrentShiftPayload]
 }>()
 
-const localForm = reactive<ShiftFormState>({
+const weekdays: { label: string; value: Weekday }[] = [
+  { label: 'Mon', value: 'monday' },
+  { label: 'Tue', value: 'tuesday' },
+  { label: 'Wed', value: 'wednesday' },
+  { label: 'Thu', value: 'thursday' },
+  { label: 'Fri', value: 'friday' },
+  { label: 'Sat', value: 'saturday' },
+  { label: 'Sun', value: 'sunday' },
+]
+
+const localForm = reactive<RecurrentShiftFormState>({
   employee_id: props.form.employee_id,
+  schedule_id: props.form.schedule_id,
   start_date: props.form.start_date,
-  start_time: props.form.start_time,
   end_date: props.form.end_date,
+  start_time: props.form.start_time,
   end_time: props.form.end_time,
+  weekdays: [...props.form.weekdays],
   creation_type: props.form.creation_type,
   status: props.form.status,
-  schedule_id: props.form.schedule_id,
 })
 
 const validationMessage = computed<string>(() => {
@@ -257,15 +283,23 @@ const validationMessage = computed<string>(() => {
     return 'End time is required.'
   }
 
+  if (localForm.weekdays.length === 0) {
+    return 'At least one weekday must be selected.'
+  }
+
+  if (localForm.start_date > localForm.end_date) {
+    return 'Start date cannot be later than end date.'
+  }
+
   const start = dayjs(`${localForm.start_date}T${localForm.start_time}`)
-  const end = dayjs(`${localForm.end_date}T${localForm.end_time}`)
+  const end = dayjs(`${localForm.start_date}T${localForm.end_time}`)
 
   if (!start.isValid() || !end.isValid()) {
-    return 'Please enter valid start and end date/time values.'
+    return 'Please enter valid start and end time values.'
   }
 
   if (!end.isAfter(start)) {
-    return 'End date and time must be later than start date and time.'
+    return 'End time must be later than start time.'
   }
 
   return ''
@@ -275,13 +309,14 @@ watch(
   () => props.form,
   (newForm) => {
     localForm.employee_id = newForm.employee_id
+    localForm.schedule_id = newForm.schedule_id
     localForm.start_date = newForm.start_date
-    localForm.start_time = newForm.start_time
     localForm.end_date = newForm.end_date
+    localForm.start_time = newForm.start_time
     localForm.end_time = newForm.end_time
+    localForm.weekdays = [...newForm.weekdays]
     localForm.creation_type = newForm.creation_type
     localForm.status = newForm.status
-    localForm.schedule_id = newForm.schedule_id
   },
   { deep: true },
 )
@@ -290,16 +325,7 @@ function formatDate(value: string): string {
   return dayjs(value).format('DD/MM/YYYY')
 }
 
-function buildDatetimes(): { start_datetime: string; end_datetime: string } {
-  return {
-    start_datetime: dayjs(
-      `${localForm.start_date}T${localForm.start_time}`,
-    ).format('YYYY-MM-DDTHH:mm:ss'),
-    end_datetime: dayjs(
-      `${localForm.end_date}T${localForm.end_time}`,
-    ).format('YYYY-MM-DDTHH:mm:ss'),
-  }
-}
+const localError = ref<string>('')
 
 function handleSubmit(): void {
   localError.value = validationMessage.value
@@ -308,14 +334,15 @@ function handleSubmit(): void {
     return
   }
 
-  const { start_datetime, end_datetime } = buildDatetimes()
-
   emit('submit', {
-    start_datetime,
-    end_datetime,
+    schedule_id: localForm.schedule_id,
+    start_date: localForm.start_date,
+    end_date: localForm.end_date,
+    start_time: localForm.start_time,
+    end_time: localForm.end_time,
+    weekdays: localForm.weekdays,
     creation_type: localForm.creation_type,
     status: localForm.status,
-    schedule_id: localForm.schedule_id,
     employee_id: localForm.employee_id,
   })
 }
