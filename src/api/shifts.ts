@@ -40,6 +40,27 @@ export type ShiftTableItem = {
   employee_name: string | null
 }
 
+export type Weekday =
+  | 'monday'
+  | 'tuesday'
+  | 'wednesday'
+  | 'thursday'
+  | 'friday'
+  | 'saturday'
+  | 'sunday'
+
+export interface CreateRecurrentShiftPayload {
+  schedule_id: number
+  start_date: string
+  end_date: string
+  start_time: string
+  end_time: string
+  weekdays: Weekday[]
+  creation_type: string
+  status: string
+  employee_id?: number | null
+}
+
 export async function getShifts(): Promise<Shift[]> {
   const response = await apiClient.get<Shift[]>('/shifts/')
   return response.data
@@ -72,4 +93,11 @@ export async function updateShift(
 
 export async function deleteShift(id: number): Promise<void> {
   await apiClient.delete(`/shifts/${id}`)
+}
+
+export async function createRecurrentShifts(
+  payload: CreateRecurrentShiftPayload,
+): Promise<Shift[]> {
+  const response = await apiClient.post<Shift[]>('/shifts/recurrent', payload)
+  return response.data
 }
