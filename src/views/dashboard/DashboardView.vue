@@ -27,10 +27,11 @@
           </h2>
 
           <div class="mt-5 grid gap-3">
-            <article
+            <RouterLink
               v-for="item in upcomingSchedule"
               :key="item.title"
-              class="flex items-center justify-between rounded-2xl border border-slate-200 p-4"
+              :to="{ name: 'schedule-detail', params: { id: recentSchedule?.id } }"
+              class="flex items-center justify-between rounded-2xl border border-slate-200 p-4 transition hover:border-blue-200 hover:bg-blue-50/40"
             >
               <div>
                 <p class="font-medium text-slate-900">{{ item.title }}</p>
@@ -43,7 +44,7 @@
               >
                 {{ item.status }}
               </span>
-            </article>
+            </RouterLink>
           </div>
         </section>
 
@@ -159,7 +160,7 @@ const upcomingSchedule = computed(() => {
     return []
   }
 
-  return recentSchedule.value.shifts.map((shift) => ({
+  return recentSchedule.value.shifts.slice(0, 5).map((shift) => ({
     title: `${capitalize(getDayName(shift.date))} · ${getShiftType(shift.start_time)} Shift`,
     description: `${shift.start_time.slice(0, 5)} - ${shift.end_time.slice(0, 5)} · ${shift.number_of_employees} employees assigned`,
     status: shift.status,
