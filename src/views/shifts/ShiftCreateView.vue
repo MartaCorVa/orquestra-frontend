@@ -122,6 +122,24 @@ const recurrentForm = reactive({
   status: 'planned',
 })
 
+function formatDateTime(value: string): string {
+  return new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(value))
+}
+
+function formatDate(value: string): string {
+  return new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(new Date(value))
+}
+
 watch(
   [form, recurrentForm, creationMode],
   () => {
@@ -171,8 +189,8 @@ async function handleSingleSubmit(payload: CreateShiftPayload): Promise<void> {
     await createShift(payload)
 
     activityStore.addActivity(
-      `${payload.start_datetime} - ${payload.end_datetime}`,
       'Shift created',
+      `${formatDateTime(payload.start_datetime)} - ${formatDateTime(payload.end_datetime)}`,
     )
 
     await router.push({ name: 'shifts' })
@@ -196,8 +214,8 @@ async function handleRecurrentSubmit(
     const createdShifts = await createRecurrentShifts(payload)
 
     activityStore.addActivity(
-      `${payload.start_date} - ${payload.end_date}`,
-      `${createdShifts.length} recurrent shifts created`,
+      'Recurrent shifts created',
+      `${createdShifts.length} shifts · ${formatDate(payload.start_date)} - ${formatDate(payload.end_date)}`,
     )
 
     await router.push({ name: 'shifts' })

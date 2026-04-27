@@ -123,6 +123,14 @@ function validateForm(): boolean {
   return true
 }
 
+function formatDate(value: string): string {
+  return new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(new Date(value))
+}
+
 async function handleSubmit(): Promise<void> {
   errorMessage.value = ''
 
@@ -140,8 +148,8 @@ async function handleSubmit(): Promise<void> {
     })
 
     activityStore.addActivity(
-      `${form.start_date} - ${form.end_date}`,
       'Schedule created',
+      `${formatDate(form.start_date)} - ${formatDate(form.end_date)}`,
     )
 
     await router.push({ name: 'schedule-detail', params: { id: schedule.id } })
