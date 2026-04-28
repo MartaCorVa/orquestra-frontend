@@ -268,20 +268,13 @@
       </div>
 
       <p
-        v-if="errorMessage"
+        v-if="localError || errorMessage"
         class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
       >
-        {{ errorMessage }}
+        {{ localError || errorMessage }}
       </p>
 
       <div class="flex flex-col items-end gap-3">
-        <p
-          v-if="submitError"
-          class="w-full text-sm font-medium text-red-600"
-        >
-          {{ submitError }}
-        </p>
-
         <div class="flex justify-end gap-3">
           <RouterLink
             to="/employees"
@@ -327,7 +320,7 @@ const emit = defineEmits<{
 }>()
 
 const formRef = ref<HTMLFormElement | null>(null)
-const submitError = ref<string>('')
+const localError = ref<string>('')
 
 const localEmployeeForm = reactive<UpdateEmployeePayload>({
   first_name: props.form.first_name,
@@ -404,7 +397,7 @@ function getDaysOffCount(): number {
 }
 
 function validateForm(): boolean {
-  submitError.value = ''
+  localError.value = ''
 
   if (!formRef.value?.checkValidity()) {
     formRef.value?.reportValidity()
@@ -414,12 +407,12 @@ function validateForm(): boolean {
   const daysOffCount = getDaysOffCount()
 
   if (daysOffCount === 7) {
-    submitError.value = 'At least one working day must be selected.'
+    localError.value = 'At least one working day must be selected.'
     return false
   }
 
   if (localContractForm.min_days_off_per_week !== daysOffCount) {
-    submitError.value =
+    localError.value =
       'Minimum days off per week must match the number of non-working days selected.'
     return false
   }
@@ -428,7 +421,7 @@ function validateForm(): boolean {
     localContractForm.has_fixed_schedule &&
     (!localContractForm.preferred_start_time || !localContractForm.preferred_end_time)
   ) {
-    submitError.value =
+    localError.value =
       'Preferred start time and end time are required when fixed schedule is enabled.'
     return false
   }
