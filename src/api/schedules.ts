@@ -20,13 +20,22 @@ export interface UpdateSchedulePayload {
   status?: ScheduleStatus
 }
 
+export interface EmployeeBelowTarget {
+  employee_id: number
+  employee_name: string
+  assigned_hours: number
+  contract_hours: number
+  missing_hours: number
+}
+
 export interface GeneratePlanningResponse {
   message: string
   assignments_created: unknown[]
   unfilled_shifts: unknown[]
-  employees_below_target: unknown[]
+  employees_below_target: EmployeeBelowTarget[]
   missing_contract_hours_total: number
 }
+
 export interface ScheduleDetailEmployee {
   id: number
   first_name: string
