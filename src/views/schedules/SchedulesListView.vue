@@ -136,65 +136,159 @@
             </thead>
 
             <tbody>
-              <tr
+              <template
                 v-for="schedule in filteredSchedules"
                 :key="schedule.id"
-                class="border-b border-slate-100 last:border-b-0"
               >
-                <td class="px-6 py-4 text-slate-900">
-                  {{ formatDate(schedule.start_date) }}
-                </td>
-
-                <td class="px-6 py-4 text-slate-900">
-                  {{ formatDate(schedule.end_date) }}
-                </td>
-
-                <td class="px-6 py-4">
-                  <span class="inline-flex rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
-                    {{ schedule.status }}
-                  </span>
-                </td>
-
-                <td class="px-6 py-4 text-slate-600">
-                  {{ formatDateTime(schedule.created_at) }}
-                </td>
-
-                <td class="px-6 py-4">
-                  <div class="flex flex-wrap gap-2">
-                    <RouterLink
-                      :to="`/schedules/${schedule.id}`"
-                      class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-100"
-                    >
-                      View
-                    </RouterLink>
-
-                    <button
-                      v-if="isAdmin && schedule.status !== 'published'"
-                      type="button"
-                      class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
-                      :disabled="generatingScheduleId === schedule.id"
-                      @click="handleGenerate(schedule)"
-                    >
-                      {{
-                        generatingScheduleId === schedule.id
-                          ? 'Generating...'
-                          : schedule.status === 'generated'
-                            ? 'Regenerate planning'
-                            : 'Generate planning'
-                      }}
-                    </button>
-                    <button
-                      v-if="isAdmin && schedule.status === 'generated'"
-                      type="button"
-                      class="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
-                      :disabled="publishingScheduleId === schedule.id"
-                      @click="handlePublish(schedule)"
-                    >
-                      {{ publishingScheduleId === schedule.id ? 'Publishing...' : 'Publish' }}
-                    </button>
-                  </div>
-                </td>
-              </tr>
+                <tr class="border-b border-slate-100 last:border-b-0">
+                  <td class="px-6 py-4 text-slate-900">
+                    {{ formatDate(schedule.start_date) }}
+                  </td>
+                
+                  <td class="px-6 py-4 text-slate-900">
+                    {{ formatDate(schedule.end_date) }}
+                  </td>
+                
+                  <td class="px-6 py-4">
+                    <span class="inline-flex rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
+                      {{ schedule.status }}
+                    </span>
+                  </td>
+                
+                  <td class="px-6 py-4 text-slate-600">
+                    {{ formatDateTime(schedule.created_at) }}
+                  </td>
+                
+                  <td class="px-6 py-4">
+                    <div class="flex flex-wrap gap-2">
+                      <RouterLink
+                        :to="`/schedules/${schedule.id}`"
+                        class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-100"
+                      >
+                        View
+                      </RouterLink>
+                    
+                      <button
+                        v-if="isAdmin && schedule.status !== 'published'"
+                        type="button"
+                        class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                        :disabled="generatingScheduleId === schedule.id"
+                        @click="handleGenerate(schedule)"
+                      >
+                        {{
+                          generatingScheduleId === schedule.id
+                            ? 'Generating...'
+                            : schedule.status === 'generated'
+                              ? 'Regenerate planning'
+                              : 'Generate planning'
+                        }}
+                      </button>
+                    
+                      <button
+                        v-if="isAdmin && schedule.status === 'generated'"
+                        type="button"
+                        class="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                        :disabled="publishingScheduleId === schedule.id"
+                        @click="handlePublish(schedule)"
+                      >
+                        {{ publishingScheduleId === schedule.id ? 'Publishing...' : 'Publish' }}
+                      </button>
+                    
+                      <button
+                        v-if="planningResultsStore.getResult(schedule.id)"
+                        type="button"
+                        class="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-medium text-blue-700 transition hover:bg-blue-100"
+                        @click="expandedScheduleId = expandedScheduleId === schedule.id ? null : schedule.id"
+                      >
+                        {{ expandedScheduleId === schedule.id ? 'Hide planning details' : 'Show planning details' }}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              
+                <tr
+                  v-if="expandedScheduleId === schedule.id && planningResultsStore.getResult(schedule.id)"
+                  class="border-b border-slate-100 bg-slate-50"
+                >
+                  <td colspan="5" class="px-6 py-5">
+                    <section class="rounded-2xl border border-slate-200 bg-white p-5">
+                      <div class="flex items-start justify-between gap-4">
+                        <div>
+                          <h3 class="text-sm font-semibold text-slate-900">
+                            Planning generation result
+                          </h3>
+                          <p class="mt-1 text-sm text-slate-600">
+                            {{ planningResultsStore.getResult(schedule.id)?.message }}
+                          </p>
+                        </div>
+                      
+                        <button
+                          type="button"
+                          class="text-sm font-medium text-slate-500 hover:text-slate-700"
+                          @click="expandedScheduleId = null"
+                        >
+                          Close
+                        </button>
+                      </div>
+                    
+                      <div class="mt-5 grid gap-4 md:grid-cols-4">
+                        <article class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                          <p class="text-xs text-slate-500">Assignments</p>
+                          <p class="mt-2 text-xl font-semibold text-slate-900">
+                            {{ planningResultsStore.getResult(schedule.id)?.assignments_created?.length ?? 0 }}
+                          </p>
+                        </article>
+                      
+                        <article class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                          <p class="text-xs text-slate-500">Unfilled shifts</p>
+                          <p class="mt-2 text-xl font-semibold text-slate-900">
+                            {{ planningResultsStore.getResult(schedule.id)?.unfilled_shifts?.length ?? 0 }}
+                          </p>
+                        </article>
+                      
+                        <article class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                          <p class="text-xs text-slate-500">Employees below target</p>
+                          <p class="mt-2 text-xl font-semibold text-slate-900">
+                            {{ planningResultsStore.getResult(schedule.id)?.employees_below_target?.length ?? 0 }}
+                          </p>
+                        </article>
+                      
+                        <article class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                          <p class="text-xs text-slate-500">Missing hours</p>
+                          <p class="mt-2 text-xl font-semibold text-slate-900">
+                            {{ planningResultsStore.getResult(schedule.id)?.missing_contract_hours_total ?? 0 }}h
+                          </p>
+                        </article>
+                      </div>
+                      <div
+                        v-if="(planningResultsStore.getResult(schedule.id)?.employees_below_target?.length ?? 0) > 0"
+                        class="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4"
+                      >
+                        <h4 class="text-sm font-semibold text-amber-900">
+                          Employees below contract target
+                        </h4>
+                      
+                        <div class="mt-3 grid gap-3">
+                          <article
+                            v-for="employee in planningResultsStore.getResult(schedule.id)?.employees_below_target ?? []"
+                            :key="employee.employee_id"
+                            class="rounded-xl border border-amber-100 bg-white px-4 py-3 text-sm"
+                          >
+                            <p class="font-medium text-slate-900">
+                              {{ employee.employee_name }}
+                            </p>
+                          
+                            <p class="mt-1 text-slate-600">
+                              Assigned {{ employee.assigned_hours }}h of {{ employee.contract_hours }}h.
+                              Missing {{ employee.missing_hours }}h.
+                            </p>
+                          </article>
+                        </div>
+                      </div>
+                    </section>
+                  </td>
+                </tr>
+              </template>
             </tbody>
           </table>
         </div>
@@ -243,6 +337,7 @@ import {
 import { useActivityStore } from '../../stores/activity'
 import { getBackendErrorMessage } from '../../utils/api'
 import { useAuthStore } from '../../stores/auth'
+import { usePlanningResultsStore } from '../../stores/planningResults'
 
 type SchedulesTab = 'table' | 'calendar'
 type ScheduleStatusFilter = 'all' | 'draft' | 'generated' | 'published'
@@ -257,6 +352,8 @@ const tableMessage = ref<string>('')
 const tableErrorMessage = ref<string>('')
 const activityStore = useActivityStore()
 const publishingScheduleId = ref<number | null>(null)
+const expandedScheduleId = ref<number | null>(null)
+const planningResultsStore = usePlanningResultsStore()
 
 const selectedStartDate = ref<string>('')
 const selectedEndDate = ref<string>('')
@@ -365,6 +462,8 @@ async function handleGenerate(schedule: Schedule): Promise<void> {
     }
 
     const result = await generatePlanning(schedule.id)
+    planningResultsStore.setResult(schedule.id, result)
+    expandedScheduleId.value = schedule.id
 
     await updateSchedule(schedule.id, {
       status: 'generated',
