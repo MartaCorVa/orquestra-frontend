@@ -186,17 +186,10 @@
       </div>
 
       <p
-        v-if="localError"
+        v-if="localError || errorMessage"
         class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
       >
-        {{ localError }}
-      </p>
-
-      <p
-        v-else-if="errorMessage"
-        class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
-      >
-        {{ errorMessage }}
+        {{ localError || errorMessage }}
       </p>
 
       <div class="flex justify-end gap-3">
