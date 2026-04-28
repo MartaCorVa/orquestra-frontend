@@ -351,20 +351,13 @@
           </div>
 
           <p
-            v-if="errorMessage"
+            v-if="localError || errorMessage"
             class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
           >
-            {{ errorMessage }}
+            {{ localError || errorMessage }}
           </p>
 
           <div class="flex flex-col items-end gap-3">
-            <p
-              v-if="submitError"
-              class="w-full text-sm font-medium text-red-600"
-            >
-              {{ submitError }}
-            </p>
-
             <div class="flex justify-end gap-3">
               <RouterLink
                 to="/employees"
@@ -434,7 +427,7 @@ const form = reactive<EmployeeOnboardingPayload>({
 
 const isSubmitting = ref<boolean>(false)
 const errorMessage = ref<string>('')
-const submitError = ref<string>('')
+const localError = ref<string>('')
 
 const activityStore = useActivityStore()
 
@@ -453,7 +446,7 @@ function getDaysOffCount(): number {
 }
 
 function validateForm(): boolean {
-  submitError.value = ''
+  localError.value = ''
 
   if (!formRef.value?.checkValidity()) {
     formRef.value?.reportValidity()
@@ -463,12 +456,12 @@ function validateForm(): boolean {
   const daysOffCount = getDaysOffCount()
 
   if (daysOffCount === 7) {
-    submitError.value = 'At least one working day must be selected.'
+    localError.value = 'At least one working day must be selected.'
     return false
   }
 
   if (form.contract.min_days_off_per_week !== daysOffCount) {
-    submitError.value =
+    localError.value =
       'Minimum days off per week must match the number of non-working days selected.'
     return false
   }
@@ -477,7 +470,7 @@ function validateForm(): boolean {
     form.contract.has_fixed_schedule &&
     (!form.contract.preferred_start_time || !form.contract.preferred_end_time)
   ) {
-    submitError.value =
+    localError.value =
       'Preferred start time and end time are required when fixed schedule is enabled.'
     return false
   }
@@ -487,7 +480,7 @@ function validateForm(): boolean {
 
 async function handleSubmit(): Promise<void> {
   errorMessage.value = ''
-  submitError.value = ''
+  localError.value = ''
 
   if (!validateForm()) {
     return
