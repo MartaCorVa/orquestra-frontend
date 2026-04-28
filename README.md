@@ -444,6 +444,40 @@ POST /planning/generate/{schedule_id}
 * The UI refreshes to display updated planning
 * Feedback is provided through loading states and error handling
 
+### Result visualization
+
+After generating planning for a schedule, the frontend displays a detailed summary of the result directly in the schedules table.
+
+#### Behavior
+
+* Each schedule with generated planning can display its **latest planning result**
+* Results are shown in an expandable panel per schedule
+* The panel includes:
+  * generation message from backend
+  * number of assignments created
+  * number of unfilled shifts
+  * employees below contract target
+  * total missing contract hours
+
+#### Employee insights
+
+If there are employees below their contract target:
+
+* A detailed list is displayed
+* Each entry shows:
+  * employee name
+  * assigned hours vs contract hours
+  * missing hours
+
+#### State management
+
+* Planning results are stored in a **Pinia store (`planningResults`)**
+* Data is kept **in-memory per session**
+* Results persist while navigating the application
+* Results are cleared on page refresh
+
+This avoids unnecessary re-fetching and allows users to inspect results without regenerating planning.
+
 ---
 
 ## 📊 Equity analysis (metrics)
