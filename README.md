@@ -562,6 +562,67 @@ Analyzes workload across a custom time period.
 
 ---
 
+## 🧪 Testing & Code Quality
+
+The frontend includes unit testing and code quality analysis.
+
+### Testing
+
+* Framework: **Vitest + Vue Test Utils**
+* Coverage is generated using V8
+
+Run tests:
+
+```bash
+npm run test
+```
+
+Run tests with coverage:
+
+```bash
+npm run test:coverage
+```
+
+### What is tested
+
+* Forms validation (ShiftForm, EmployeeForm, etc.)
+* View logic (ShiftCreateView, EquityAnalysisView)
+API interactions and error handling
+
+---
+
+### Code quality (SonarQube / SonarCloud)
+
+The project is prepared for static analysis using Sonar.
+
+Metrics include:
+
+* Code coverage
+* Maintainability
+* Reliability
+* Security issues
+
+---
+
+## 🏗️ Frontend architecture
+
+The application follows a modular and scalable structure:
+
+* **Views** → page-level components (routing)
+* **Components** → reusable UI elements
+* **Stores (Pinia)** → global state management
+* **API layer** → centralized communication with backend
+* **Composables** → reusable logic
+
+### Design principles
+
+* Separation of concerns
+* Single responsibility per component
+* Clear API abstraction layer
+* Reactive state management
+
+---
+
 ## 🧠 Application behavior
 
 The frontend enforces business rules defined by the backend:
