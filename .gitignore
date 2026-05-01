@@ -44,6 +44,9 @@ Thumbs.db
 *.err
 
 # lockfiles
-package-lock.json
 pnpm-lock.yaml
 yarn.lock
+
+# Sonar
+.scannerwork/
+coverage/
