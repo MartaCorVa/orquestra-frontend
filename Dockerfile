@@ -6,7 +6,17 @@ COPY package*.json ./
 
 RUN npm install
 
-COPY . .
+COPY index.html ./
+COPY vite.config.ts ./
+COPY tsconfig*.json ./
+COPY src ./src
+COPY public ./public
+
+RUN addgroup -S appgroup \
+    && adduser -S appuser -G appgroup \
+    && chown -R appuser:appgroup /app
+
+USER appuser
 
 EXPOSE 5173
 
