@@ -22,7 +22,7 @@ describe('LoginView', () => {
 
     authStoreMock.isAuthLoading = false
     authStoreMock.authError = ''
-    authStoreMock.mustChangePassword = false
+    authStoreMock.mustChangeCredentials = false
     authStoreMock.login = vi.fn().mockResolvedValue(undefined)
     authStoreMock.clearError = vi.fn()
   })
@@ -54,7 +54,7 @@ describe('LoginView', () => {
   })
 
   it('redirects to change password when required', async () => {
-    authStoreMock.mustChangePassword = true
+    authStoreMock.mustChangeCredentials = true
 
     const wrapper = mount(LoginView)
 

@@ -6,7 +6,7 @@ import {
 
 import {
   getAccessToken,
-  getMustChangePassword,
+  getMustChangeCredentials,
   getRole,
 } from '../utils/storage'
 
@@ -182,7 +182,7 @@ const router = createRouter({
 
 router.beforeEach((to) => {
   const token = getAccessToken()
-  const mustChangePassword = getMustChangePassword()
+  const mustChangeCredentials = getMustChangeCredentials()
   const role = getRole()
 
   const isAuthenticated = Boolean(token)
@@ -196,23 +196,23 @@ router.beforeEach((to) => {
     return { name: 'login' }
   }
 
-  if (isAuthenticated && mustChangePassword && !isChangePasswordRoute) {
+  if (isAuthenticated && mustChangeCredentials && !isChangePasswordRoute) {
     return { name: 'change-password' }
   }
 
   if (isAuthenticated && isLoginRoute) {
-    return mustChangePassword
+    return mustChangeCredentials
       ? { name: 'change-password' }
       : { name: 'dashboard' }
   }
 
-  if (isAuthenticated && !mustChangePassword && isChangePasswordRoute) {
+  if (isAuthenticated && !mustChangeCredentials && isChangePasswordRoute) {
     return { name: 'dashboard' }
   }
 
   if (
     isAuthenticated &&
-    !mustChangePassword &&
+    !mustChangeCredentials &&
     allowedRoles &&
     !allowedRoles.includes(role)
   ) {

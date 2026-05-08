@@ -154,7 +154,7 @@ async function handleSubmit(): Promise<void> {
     await authStore.login(form)
 
     await router.push(
-      authStore.mustChangePassword
+      authStore.mustChangeCredentials
         ? { name: 'change-password' }
         : { name: 'dashboard' },
     )

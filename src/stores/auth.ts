@@ -5,11 +5,11 @@ import { changePasswordRequest, loginRequest } from '../api/auth'
 import {
   clearAuthStorage,
   getAccessToken,
-  getMustChangePassword,
+  getMustChangeCredentials,
   getRole,
   getUserEmail,
   setAccessToken,
-  setMustChangePassword,
+  setMustChangeCredentials,
   setRole,
   setUserEmail,
 } from '../utils/storage'
@@ -21,7 +21,7 @@ import type {
 
 export const useAuthStore = defineStore('auth', () => {
   const accessToken = ref<string | null>(null)
-  const mustChangePassword = ref<boolean>(false)
+  const mustChangeCredentials = ref<boolean>(false)
   const userEmail = ref<string>('')
   const isAuthLoading = ref<boolean>(false)
   const authError = ref<string>('')
@@ -32,7 +32,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   function initializeAuth(): void {
     accessToken.value = getAccessToken()
-    mustChangePassword.value = getMustChangePassword()
+    mustChangeCredentials.value = getMustChangeCredentials()
     userRole.value = getRole()
     userEmail.value = getUserEmail()
     isAuthInitialized.value = true
@@ -40,24 +40,24 @@ export const useAuthStore = defineStore('auth', () => {
 
   function setSession(payload: {
     accessToken: string
-    mustChangePassword: boolean
+    mustChangeCredentials: boolean
     role: string
     userEmail: string
   }): void {
     accessToken.value = payload.accessToken
-    mustChangePassword.value = payload.mustChangePassword
+    mustChangeCredentials.value = payload.mustChangeCredentials
     userRole.value = payload.role
     userEmail.value = payload.userEmail
 
     setAccessToken(payload.accessToken)
-    setMustChangePassword(payload.mustChangePassword)
+    setMustChangeCredentials(payload.mustChangeCredentials)
     setRole(payload.role)
     setUserEmail(payload.userEmail)
   }
 
   function clearSession(): void {
     accessToken.value = null
-    mustChangePassword.value = false
+    mustChangeCredentials.value = false
     userRole.value = ''
     userEmail.value = ''
     authError.value = ''
@@ -74,7 +74,7 @@ export const useAuthStore = defineStore('auth', () => {
 
       setSession({
         accessToken: response.access_token,
-        mustChangePassword: response.must_change_password,
+        mustChangeCredentials: response.must_change_password,
         role: response.role,
         userEmail: response.user,
       })
@@ -96,8 +96,8 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       await changePasswordRequest(payload)
 
-      mustChangePassword.value = false
-      setMustChangePassword(false)
+      mustChangeCredentials.value = false
+      setMustChangeCredentials(false)
     } catch (error: unknown) {
       authError.value = getBackendErrorMessage(
         error,
@@ -119,7 +119,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   return {
     accessToken,
-    mustChangePassword,
+    mustChangeCredentials,
     userEmail,
     isAuthLoading,
     authError,
