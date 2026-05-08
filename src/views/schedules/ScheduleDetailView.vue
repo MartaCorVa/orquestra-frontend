@@ -263,7 +263,7 @@ async function handlePublish(): Promise<void> {
     return
   }
 
-  const confirmed = window.confirm(
+  const confirmed = globalThis.confirm(
     'The schedule status will change to published and planning cannot be regenerated. Are you sure you want to continue?',
   )
 
