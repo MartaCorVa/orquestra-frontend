@@ -148,7 +148,7 @@ const capitalize = (text: string) =>
   text.charAt(0).toUpperCase() + text.slice(1)
 
 const getShiftType = (startTime: string): string => {
-  const hour = parseInt(startTime.split(':')[0])
+  const hour = Number.parseInt(startTime.split(':')[0], 10)
 
   if (hour >= 6 && hour < 14) return 'Morning'
   if (hour >= 14 && hour < 22) return 'Evening'
