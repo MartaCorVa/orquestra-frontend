@@ -22,17 +22,19 @@ apiClient.interceptors.request.use(
 
     return config
   },
-  async (error: AxiosError): Promise<never> => Promise.reject(error),
+  (error: AxiosError): never => {
+    throw error
+  },
 )
 
 apiClient.interceptors.response.use(
   (response) => response,
-  async (error: AxiosError): Promise<never> => {
+    (error: AxiosError): never => {
     if (error.response?.status === 401) {
       clearAuthStorage()
     }
-
-    return Promise.reject(error)
+  
+    throw error
   },
 )
 

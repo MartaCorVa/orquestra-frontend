@@ -1,5 +1,5 @@
 export const formatRelativeTime = (timestamp: string): string => {
-  const now = new Date().getTime()
+  const now = Date.now()
   const date = new Date(timestamp).getTime()
   const diffInSeconds = Math.floor((now - date) / 1000)
 

@@ -60,7 +60,7 @@ describe('axios api client', () => {
     expect(result.headers.Authorization).toBeUndefined()
   })
 
-  it('clears auth storage on 401 response', async () => {
+  it('clears auth storage on 401 response', () => {
     const interceptor = getResponseRejectedInterceptor()
 
     const error = new AxiosError('Unauthorized')
@@ -72,13 +72,13 @@ describe('axios api client', () => {
       config: {} as any,
     }
 
-    await expect(interceptor(error)).rejects.toThrow()
+    expect(() => interceptor(error)).toThrow(error)
     expect(clearAuthStorageMock).toHaveBeenCalled()
   })
 
-  it('does not clear auth storage on non-401 response', async () => {
+  it('does not clear auth storage on non-401 response', () => {
     const interceptor = getResponseRejectedInterceptor()
-
+    
     const error = new AxiosError('Server error')
     error.response = {
       status: 500,
@@ -87,8 +87,8 @@ describe('axios api client', () => {
       headers: {},
       config: {} as any,
     }
-
-    await expect(interceptor(error)).rejects.toThrow()
+  
+    expect(() => interceptor(error)).toThrow(error)
     expect(clearAuthStorageMock).not.toHaveBeenCalled()
   })
 })

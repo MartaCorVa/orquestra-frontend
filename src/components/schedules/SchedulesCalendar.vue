@@ -116,7 +116,7 @@ const calendarOptions = computed<CalendarOptions>(() => ({
   },
   eventClick(info: EventClickArg) {
     const scheduleId = info.event.extendedProps.scheduleId as number
-    void router.push(`/schedules/${scheduleId}`)
+    router.push(`/schedules/${scheduleId}`)
   },
   eventDidMount(info) {
     const status = (info.event.extendedProps.status as string | undefined) ?? ''

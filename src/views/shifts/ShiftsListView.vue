@@ -264,7 +264,7 @@ async function loadShifts(): Promise<void> {
 }
 
 async function handleDelete(shiftId: number): Promise<void> {
-  const shouldDelete = window.confirm('Are you sure you want to delete this shift?')
+  const shouldDelete = globalThis.confirm('Are you sure you want to delete this shift?')
 
   if (!shouldDelete) {
     return

@@ -230,7 +230,7 @@ async function handleRecurrentSubmit(
 }
 
 onMounted(() => {
-  void Promise.all([
+  Promise.all([
     loadSchedules(),
     loadEmployees(),
   ])

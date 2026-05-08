@@ -412,6 +412,18 @@ const weeklyHoursOptions = computed(() => {
   return Array.from(new Set(hours)).sort((a, b) => a - b)
 })
 
+function matchesEmployeeStatus(employee: Employee): boolean {
+  if (statusFilter.value === 'all') {
+    return true
+  }
+
+  if (statusFilter.value === 'active') {
+    return employee.active
+  }
+
+  return !employee.active
+}
+
 const filteredEmployees = computed(() => {
   const result = [...employees.value]
 
@@ -422,12 +434,7 @@ const filteredEmployees = computed(() => {
           .includes(searchQuery.value.toLowerCase())
       : true
 
-    const matchesStatus =
-      statusFilter.value === 'all'
-        ? true
-        : statusFilter.value === 'active'
-          ? employee.active
-          : !employee.active
+    const matchesStatus = matchesEmployeeStatus(employee)
 
     const matchesWeeklyHours =
       weeklyHoursFilter.value === ''
