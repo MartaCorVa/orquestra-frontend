@@ -1,21 +1,21 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import EquityAnalysisView from '../../views/metrics/EquityAnalysisView.vue'
-import { getSchedules } from '../../api/schedules'
-import { getScheduleFairness, getWorkloadMetrics } from '../../api/metrics'
-import { schedulesMock } from '../mocks/schedules'
+import EquityAnalysisView from '../../../views/metrics/EquityAnalysisView.vue'
+import { getSchedules } from '../../../api/schedules'
+import { getScheduleFairness, getWorkloadMetrics } from '../../../api/metrics'
+import { schedulesMock } from '../../mocks/schedules'
 
-vi.mock('../../api/schedules', () => ({
+vi.mock('../../../api/schedules', () => ({
   getSchedules: vi.fn(),
 }))
 
-vi.mock('../../api/metrics', () => ({
+vi.mock('../../../api/metrics', () => ({
   getScheduleFairness: vi.fn(),
   getWorkloadMetrics: vi.fn(),
 }))
 
-vi.mock('../../utils/api', () => ({
+vi.mock('../../../utils/api', () => ({
   getBackendErrorMessage: vi.fn((_error: unknown, fallback: string) => fallback),
 }))
 

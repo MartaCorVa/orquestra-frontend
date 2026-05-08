@@ -2,18 +2,18 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
 
-import EmployeesListView from '../../views/employees/EmployeesListView.vue'
-import { getEmployees, updateEmployee } from '../../api/employees'
-import { getActiveContractByEmployee } from '../../api/contracts'
-import { employeesMock } from '../mocks/employees'
-import { contractMock } from '../mocks/contracts'
+import EmployeesListView from '../../../views/employees/EmployeesListView.vue'
+import { getEmployees, updateEmployee } from '../../../api/employees'
+import { getActiveContractByEmployee } from '../../../api/contracts'
+import { employeesMock } from '../../mocks/employees'
+import { contractMock } from '../../mocks/contracts'
 
-vi.mock('../../api/employees', () => ({
+vi.mock('../../../api/employees', () => ({
   getEmployees: vi.fn(),
   updateEmployee: vi.fn(),
 }))
 
-vi.mock('../../api/contracts', () => ({
+vi.mock('../../../api/contracts', () => ({
   getActiveContractByEmployee: vi.fn(),
 }))
 
