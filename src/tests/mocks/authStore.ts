@@ -3,7 +3,7 @@ import { vi } from 'vitest'
 export const authStoreMock = {
   isAuthLoading: false,
   authError: '',
-  mustChangePassword: false,
+  mustChangeCredentials: false,
 
   clearError: vi.fn(),
   login: vi.fn(),
