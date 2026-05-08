@@ -1,11 +1,11 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { getSchedules } from '../../api/schedules'
-import { getEmployees } from '../../api/employees'
-import { createRecurrentShifts, createShift, type Shift } from '../../api/shifts'
-import ShiftCreateView from '../../views/shifts/ShiftCreateView.vue'
-import { schedulesMock } from '../mocks/schedules'
-import { employeesMock } from '../mocks/employees'
+import { getSchedules } from '../../../api/schedules'
+import { getEmployees } from '../../../api/employees'
+import { createRecurrentShifts, createShift, type Shift } from '../../../api/shifts'
+import ShiftCreateView from '../../../views/shifts/ShiftCreateView.vue'
+import { schedulesMock } from '../../mocks/schedules'
+import { employeesMock } from '../../mocks/employees'
 
 const pushMock = vi.fn()
 const addActivityMock = vi.fn()
@@ -21,26 +21,26 @@ vi.mock('vue-router', () => ({
   },
 }))
 
-vi.mock('../../stores/activity', () => ({
+vi.mock('../../../stores/activity', () => ({
   useActivityStore: () => ({
     addActivity: addActivityMock,
   }),
 }))
 
-vi.mock('../../api/schedules', () => ({
+vi.mock('../../../api/schedules', () => ({
   getSchedules: vi.fn(),
 }))
 
-vi.mock('../../api/employees', () => ({
+vi.mock('../../../api/employees', () => ({
   getEmployees: vi.fn(),
 }))
 
-vi.mock('../../api/shifts', () => ({
+vi.mock('../../../api/shifts', () => ({
   createShift: vi.fn(),
   createRecurrentShifts: vi.fn(),
 }))
 
-vi.mock('../../utils/api', () => ({
+vi.mock('../../../utils/api', () => ({
   getBackendErrorMessage: vi.fn((_error: unknown, fallback: string) => fallback),
 }))
 

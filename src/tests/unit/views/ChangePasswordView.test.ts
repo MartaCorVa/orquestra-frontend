@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
-import ChangePasswordView from '../../views/auth/ChangePasswordView.vue'
-import { authStoreMock } from '../mocks/authStore'
+
+import ChangePasswordView from '../../../views/auth/ChangePasswordView.vue'
+import { authStoreMock } from '../../mocks/authStore'
 
 const pushMock = vi.fn()
 
@@ -11,7 +12,7 @@ vi.mock('vue-router', () => ({
   }),
 }))
 
-vi.mock('../../stores/auth', () => ({
+vi.mock('../../../stores/auth', () => ({
   useAuthStore: () => authStoreMock,
 }))
 
