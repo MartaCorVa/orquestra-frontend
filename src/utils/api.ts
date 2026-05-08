@@ -2,41 +2,69 @@ import { AxiosError } from 'axios'
 
 import type { BackendErrorResponse } from '../types/api'
 
+function isValidString(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0
+}
+
+function extractErrors(detail: unknown): string | null {
+  if (
+    typeof detail === 'object' &&
+    detail !== null &&
+    'errors' in detail &&
+    Array.isArray((detail as any).errors)
+  ) {
+    const errors = (detail as any).errors as string[]
+
+    if (errors.length > 0) {
+      return errors.join(' · ')
+    }
+  }
+
+  return null
+}
+
+function extractMessage(detail: unknown): string | null {
+  if (
+    typeof detail === 'object' &&
+    detail !== null &&
+    'message' in detail
+  ) {
+    const message = (detail as any).message
+
+    if (isValidString(message)) {
+      return message
+    }
+  }
+
+  return null
+}
+
 export function getBackendErrorMessage(
   error: unknown,
   fallbackMessage: string,
 ): string {
-  if (error instanceof AxiosError) {
-    const backendDetail = (error.response?.data as BackendErrorResponse | undefined)?.detail
+  if (!(error instanceof AxiosError)) {
+    return fallbackMessage
+  }
 
-    if (typeof backendDetail === 'string' && backendDetail.trim().length > 0) {
-      return backendDetail
-    }
+  const backendDetail = (
+    error.response?.data as BackendErrorResponse | undefined
+  )?.detail
 
-    if (
-      typeof backendDetail === 'object' &&
-      backendDetail !== null &&
-      'errors' in backendDetail &&
-      Array.isArray((backendDetail as any).errors)
-    ) {
-      const errors = (backendDetail as any).errors as string[]
+  if (isValidString(backendDetail)) {
+    return backendDetail
+  }
 
-      if (errors.length > 0) {
-        return errors.join(' · ')
-      }
-    }
+  const errors = extractErrors(backendDetail)
 
-    if (
-      typeof backendDetail === 'object' &&
-      backendDetail !== null &&
-      'message' in backendDetail
-    ) {
-      const message = (backendDetail as any).message
+  if (errors) {
+    return errors
+  }
 
-      if (typeof message === 'string' && message.trim().length > 0) {
-        return message
-      }
-    }
+  const message = extractMessage(backendDetail)
+
+  if (message) {
+    return message
   }
 
   return fallbackMessage

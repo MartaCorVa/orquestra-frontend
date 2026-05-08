@@ -72,4 +72,14 @@ describe('getBackendErrorMessage', () => {
 
     expect(getBackendErrorMessage(error, fallbackMessage)).toBe(fallbackMessage)
   })
+
+  it('returns fallback message when backend detail message is not a string', () => {
+    const error = createAxiosError({
+      message: 123,
+    })
+  
+    expect(getBackendErrorMessage(error, fallbackMessage)).toBe(
+      fallbackMessage,
+    )
+  })
 })
