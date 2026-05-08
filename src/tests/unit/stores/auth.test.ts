@@ -80,7 +80,7 @@ describe('auth store', () => {
 
     store.setSession({
       accessToken: 'token',
-      mustChangePassword: true,
+      mustChangeCredentials: true,
       role: 'manager',
       userEmail: 'marta@example.com',
     })
@@ -102,7 +102,7 @@ describe('auth store', () => {
 
     store.setSession({
       accessToken: 'token',
-      mustChangePassword: true,
+      mustChangeCredentials: true,
       role: 'manager',
       userEmail: 'marta@example.com',
     })
@@ -206,7 +206,7 @@ describe('auth store', () => {
 
     store.setSession({
       accessToken: 'token',
-      mustChangePassword: true,
+      mustChangeCredentials: true,
       role: 'manager',
       userEmail: 'marta@example.com',
     })
