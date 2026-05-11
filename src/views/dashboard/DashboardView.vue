@@ -4,7 +4,10 @@
     subtitle="General overview of employees, shifts, schedules, and workload distribution."
   >
     <section class="grid gap-6">
-      <div class="grid gap-4 xl:grid-cols-4">
+      <div 
+        class="grid gap-4"
+        :class="isAdmin ? 'xl:grid-cols-4' : 'xl:grid-cols-3'"
+      >
         <article
           v-for="card in summaryCards"
           :key="card.label"
@@ -26,7 +29,14 @@
             Upcoming schedule
           </h2>
 
-          <div class="mt-5 grid gap-3">
+          <div
+            v-if="upcomingSchedule.length === 0"
+            class="mt-5 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5 text-sm text-slate-500"
+          >
+            No upcoming schedule available.
+          </div>
+
+          <div v-else class="mt-5 grid gap-3">
             <RouterLink
               v-for="item in upcomingSchedule"
               :key="item.title"
@@ -117,24 +127,31 @@ onMounted(async () => {
   }
 })
 
-const summaryCards = computed<SummaryCard[]>(() => [
-  {
-    label: 'Active employees',
-    value: summaryMetrics.value.active_employees,
-  },
-  {
-    label: 'Shifts this week',
-    value: summaryMetrics.value.weekly_shifts,
-  },
-  {
-    label: 'Schedules',
-    value: summaryMetrics.value.schedules,
-  },
-  {
-    label: 'Schedules to validate',
-    value: summaryMetrics.value.pending_validations,
-  },
-])
+const summaryCards = computed<SummaryCard[]>(() => {
+  const cards: SummaryCard[] = [
+    {
+      label: 'Active employees',
+      value: summaryMetrics.value.active_employees,
+    },
+    {
+      label: 'Shifts this week',
+      value: summaryMetrics.value.weekly_shifts,
+    },
+    {
+      label: 'Schedules',
+      value: summaryMetrics.value.schedules,
+    },
+  ]
+
+  if (isAdmin.value) {
+    cards.push({
+      label: 'Schedules to validate',
+      value: summaryMetrics.value.pending_validations,
+    })
+  }
+
+  return cards
+})
 
 const getDayName = (date: string): string => {
   const d = new Date(date)
@@ -155,13 +172,28 @@ const getShiftType = (startTime: string): string => {
   return 'Night'
 }
 
+const getShiftDayRange = (shift: {
+  start_date: string
+  end_date: string
+}): string => {
+  const startDay = capitalize(getDayName(shift.start_date))
+
+  if (shift.start_date === shift.end_date) {
+    return startDay
+  }
+
+  const endDay = capitalize(getDayName(shift.end_date))
+
+  return `${startDay} - ${endDay}`
+}
+
 const upcomingSchedule = computed(() => {
   if (!recentSchedule.value || recentSchedule.value.shifts.length === 0) {
     return []
   }
 
   return recentSchedule.value.shifts.slice(0, 5).map((shift) => ({
-    title: `${capitalize(getDayName(shift.date))} · ${getShiftType(shift.start_time)} Shift`,
+    title: `${getShiftDayRange(shift)} · ${getShiftType(shift.start_time)} Shift`,
     description: `${shift.start_time.slice(0, 5)} - ${shift.end_time.slice(0, 5)} · ${shift.number_of_employees} employees assigned`,
     status: shift.status,
     badgeClass: getBadgeClass(shift.status),
