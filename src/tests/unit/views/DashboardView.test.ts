@@ -15,6 +15,22 @@ describe('DashboardView', () => {
     vi.clearAllMocks()
   })
 
+  function setAuthRole(role: 'admin' | 'employee') {
+    const authStore = useAuthStore()
+
+    localStorage.setItem('role', role)
+
+    if ('role' in authStore) {
+      ;(authStore as unknown as { role: string }).role = role
+    }
+
+    if ('userRole' in authStore) {
+      ;(authStore as unknown as { userRole: string }).userRole = role
+    }
+
+    return authStore
+  }
+
   function mountView() {
     return mount(DashboardView, {
       global: {
@@ -33,9 +49,7 @@ describe('DashboardView', () => {
 
   it('renders summary cards for admin', async () => {
     const dashboardStore = useDashboardStore()
-    const authStore = useAuthStore()
-
-    authStore.userRole = 'admin'
+    setAuthRole('admin')
 
     dashboardStore.summaryMetrics = {
       active_employees: 5,
@@ -62,9 +76,7 @@ describe('DashboardView', () => {
 
   it('does not render schedules to validate card for employees', async () => {
     const dashboardStore = useDashboardStore()
-    const authStore = useAuthStore()
-
-    authStore.userRole = 'employee'
+    setAuthRole('employee')
 
     dashboardStore.summaryMetrics = {
       active_employees: 5,
@@ -122,7 +134,7 @@ describe('DashboardView', () => {
     await nextTick()
 
     expect(wrapper.text()).toContain('Upcoming schedule')
-    expect(wrapper.text()).toContain('Morning Shift')
+    expect(wrapper.text()).toContain('Monday · Morning Shift')
     expect(wrapper.text()).toContain('09:00 - 17:00')
     expect(wrapper.text()).toContain('2 employees assigned')
   })
@@ -150,9 +162,9 @@ describe('DashboardView', () => {
 
     await nextTick()
 
-    expect(wrapper.text()).toContain('Monday - Tuesday')
-    expect(wrapper.text()).toContain('Night Shift')
+    expect(wrapper.text()).toContain('Monday - Tuesday · Night Shift')
     expect(wrapper.text()).toContain('22:00 - 06:00')
+    expect(wrapper.text()).toContain('1 employees assigned')
   })
 
   it('shows empty state when there is no upcoming schedule', async () => {
@@ -171,10 +183,9 @@ describe('DashboardView', () => {
 
   it('shows recent activity for admin users', async () => {
     const dashboardStore = useDashboardStore()
-    const authStore = useAuthStore()
     const activityStore = useActivityStore()
 
-    authStore.userRole = 'admin'
+    setAuthRole('admin')
 
     activityStore.activities = [
       {
@@ -200,9 +211,8 @@ describe('DashboardView', () => {
 
   it('does not show recent activity for non-admin users', async () => {
     const dashboardStore = useDashboardStore()
-    const authStore = useAuthStore()
 
-    authStore.userRole = 'employee'
+    setAuthRole('employee')
 
     vi.spyOn(dashboardStore, 'loadDashboardData').mockResolvedValue()
 

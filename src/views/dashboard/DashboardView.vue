@@ -4,7 +4,7 @@
     subtitle="General overview of employees, shifts, schedules, and workload distribution."
   >
     <section class="grid gap-6">
-      <div 
+      <div
         class="grid gap-4"
         :class="isAdmin ? 'xl:grid-cols-4' : 'xl:grid-cols-3'"
       >
@@ -154,14 +154,14 @@ const summaryCards = computed<SummaryCard[]>(() => {
 })
 
 const getDayName = (date: string): string => {
-  const d = new Date(date)
+  const parsedDate = new Date(`${date}T00:00:00`)
 
-  return d.toLocaleDateString('en-US', {
+  return parsedDate.toLocaleDateString('en-US', {
     weekday: 'long',
   })
 }
 
-const capitalize = (text: string) =>
+const capitalize = (text: string): string =>
   text.charAt(0).toUpperCase() + text.slice(1)
 
 const getShiftType = (startTime: string): string => {
