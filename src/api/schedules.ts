@@ -49,7 +49,8 @@ export interface ScheduleDetailAssignment {
 
 export interface ScheduleDetailShift {
   id: number
-  date: string
+  start_date: string
+  end_date: string
   start_time: string
   end_time: string
   status: string

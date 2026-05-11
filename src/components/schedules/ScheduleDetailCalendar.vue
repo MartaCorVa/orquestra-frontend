@@ -32,21 +32,10 @@ function buildShiftDateTime(date: string, time: string): string {
   return dayjs(`${date}T${time}`).toISOString()
 }
 
-function buildShiftEndDateTime(date: string, startTime: string, endTime: string): string {
-  const start = dayjs(`${date}T${startTime}`)
-  let end = dayjs(`${date}T${endTime}`)
-
-  if (end.isBefore(start) || end.isSame(start)) {
-    end = end.add(1, 'day')
-  }
-
-  return end.toISOString()
-}
-
 const events = computed<EventInput[]>(() => {
   return props.schedule.shifts.map((shift) => {
-    const start = buildShiftDateTime(shift.date, shift.start_time)
-    const end = buildShiftEndDateTime(shift.date, shift.start_time, shift.end_time)
+    const start = buildShiftDateTime(shift.start_date, shift.start_time)
+    const end = buildShiftDateTime(shift.end_date, shift.end_time)
 
     const assignedEmployees =
       shift.assignments?.map((assignment) => {
