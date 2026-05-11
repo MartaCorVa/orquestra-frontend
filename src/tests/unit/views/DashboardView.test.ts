@@ -30,8 +30,11 @@ describe('DashboardView', () => {
     })
   }
 
-  it('renders summary cards', async () => {
+  it('renders summary cards for admin', async () => {
     const dashboardStore = useDashboardStore()
+    const authStore = useAuthStore()
+
+    authStore.userRole = 'admin'
 
     dashboardStore.summaryMetrics = {
       active_employees: 5,
@@ -50,8 +53,35 @@ describe('DashboardView', () => {
     expect(wrapper.text()).toContain('5')
     expect(wrapper.text()).toContain('Shifts this week')
     expect(wrapper.text()).toContain('12')
+    expect(wrapper.text()).toContain('Schedules')
+    expect(wrapper.text()).toContain('3')
     expect(wrapper.text()).toContain('Schedules to validate')
     expect(wrapper.text()).toContain('1')
+  })
+
+  it('does not render schedules to validate card for employees', async () => {
+    const dashboardStore = useDashboardStore()
+    const authStore = useAuthStore()
+    
+    authStore.userRole = 'employee'
+    
+    dashboardStore.summaryMetrics = {
+      active_employees: 5,
+      weekly_shifts: 12,
+      schedules: 3,
+      pending_validations: 1,
+    }
+  
+    vi.spyOn(dashboardStore, 'loadDashboardData').mockResolvedValue()
+  
+    const wrapper = mountView()
+  
+    await nextTick()
+  
+    expect(wrapper.text()).toContain('Active employees')
+    expect(wrapper.text()).toContain('Shifts this week')
+    expect(wrapper.text()).toContain('Schedules')
+    expect(wrapper.text()).not.toContain('Schedules to validate')
   })
 
   it('loads dashboard data on mount', async () => {
@@ -74,7 +104,8 @@ describe('DashboardView', () => {
       id: 1,
       shifts: [
         {
-          date: '2026-05-04',
+          start_date: '2026-05-04',
+          end_date: '2026-05-04',
           start_time: '09:00:00',
           end_time: '17:00:00',
           status: 'planned',
