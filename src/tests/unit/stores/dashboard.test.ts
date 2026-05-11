@@ -76,7 +76,8 @@ describe('dashboard store', () => {
       id: 1,
       shifts: [
         {
-          date: '2026-05-01',
+          start_date: '2026-05-01',
+          end_date: '2026-05-01',
           start_time: '09:00',
           end_time: '17:00',
           status: 'draft',
