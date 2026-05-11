@@ -14,7 +14,7 @@
         </RouterLink>
       </div>
 
-      <FiltersPanel>
+      <FiltersPanel columns-class="xl:grid-cols-5">
         <div class="flex flex-col gap-2">
           <label for="shift-employee" class="text-sm font-medium text-slate-700">
             Employee
@@ -35,15 +35,29 @@
           </select>
         </div>
       
-        <div class="flex flex-col gap-2">
-          <label for="shift-date" class="text-sm font-medium text-slate-700">
-            Date
+        <div class="flex min-w-0 flex-col gap-2">
+          <label for="shift-start-date" class="text-sm font-medium text-slate-700">
+            Start date
           </label>
           <input
-            id="shift-date"
-            v-model="selectedDate"
+            id="shift-start-date"
+            v-model="selectedStartDate"
             type="date"
-            class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition focus:border-blue-500"
+            :max="selectedEndDate || undefined"
+            class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-blue-500"
+          />
+        </div>
+      
+        <div class="flex min-w-0 flex-col gap-2">
+          <label for="shift-end-date" class="text-sm font-medium text-slate-700">
+            End date
+          </label>
+          <input
+            id="shift-end-date"
+            v-model="selectedEndDate"
+            type="date"
+            :min="selectedStartDate || undefined"
+            class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-blue-500"
           />
         </div>
       
@@ -63,7 +77,7 @@
           </select>
         </div>
       
-        <div class="flex flex-col gap-2">
+        <div class="flex min-w-0 flex-col gap-2">
           <label for="shift-creation-type" class="text-sm font-medium text-slate-700">
             Creation type
           </label>
@@ -90,8 +104,10 @@
           </div>
         </div>
 
-        <div v-else-if="filteredShifts.length === 0" class="p-6 text-sm text-slate-500">
-          No shifts found.
+        <div v-else-if="filteredShifts.length === 0" class="p-6">
+          <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+            {{ emptyShiftsMessage }}
+          </div>
         </div>
 
         <div v-else class="overflow-x-auto">
@@ -148,6 +164,7 @@
                     </RouterLink>
 
                     <button
+                      v-if="canDeleteShift(shift)"
                       type="button"
                       class="rounded-lg border border-red-300 bg-white px-3 py-2 text-xs font-medium text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
                       :disabled="deletingShiftId === shift.id"
@@ -200,7 +217,8 @@ const isAdmin = computed(() => userRole.value === 'admin')
 const selectedEmployee = ref<string>('all')
 const selectedStatus = ref<'all' | 'planned' | 'assigned' | 'cancelled'>('all')
 const selectedCreationType = ref<'all' | 'manual' | 'automatic'>('all')
-const selectedDate = ref<string>('')
+const selectedStartDate = ref<string>('')
+const selectedEndDate = ref<string>('')
 
 const employeeOptions = computed(() => {
   const uniqueEmployees = new Map<string, string>()
@@ -220,15 +238,27 @@ const employeeOptions = computed(() => {
 const filteredShifts = computed(() => {
   let result = [...shifts.value]
 
+  if (!selectedStartDate.value && !selectedEndDate.value) {
+    result = result.filter(
+      (shift) => !dayjs(shift.start_datetime).isBefore(dayjs(), 'day'),
+    )
+  }
+
   if (selectedEmployee.value !== 'all') {
     result = result.filter(
       (shift) => String(shift.employee_id) === selectedEmployee.value,
     )
   }
 
-  if (selectedDate.value) {
+  if (selectedStartDate.value) {
     result = result.filter(
-      (shift) => dayjs(shift.start_datetime).format('YYYY-MM-DD') === selectedDate.value,
+      (shift) => !dayjs(shift.start_datetime).isBefore(dayjs(selectedStartDate.value), 'day'),
+    )
+  }
+  
+  if (selectedEndDate.value) {
+    result = result.filter(
+      (shift) => !dayjs(shift.start_datetime).isAfter(dayjs(selectedEndDate.value), 'day'),
     )
   }
 
@@ -241,6 +271,12 @@ const filteredShifts = computed(() => {
       (shift) => shift.creation_type === selectedCreationType.value,
     )
   }
+
+  result.sort(
+    (a, b) =>
+      dayjs(b.start_datetime).valueOf() -
+      dayjs(a.start_datetime).valueOf(),
+  )
 
   return result
 })
@@ -261,6 +297,10 @@ async function loadShifts(): Promise<void> {
   } finally {
     isLoading.value = false
   }
+}
+
+function canDeleteShift(shift: ShiftTableItem): boolean {
+  return !dayjs(shift.start_datetime).isBefore(dayjs(), 'day')
 }
 
 async function handleDelete(shiftId: number): Promise<void> {
@@ -285,6 +325,14 @@ async function handleDelete(shiftId: number): Promise<void> {
     deletingShiftId.value = null
   }
 }
+
+const emptyShiftsMessage = computed(() => {
+  if (selectedStartDate.value || selectedEndDate.value) {
+    return 'No shifts found for the selected date range.'
+  }
+
+  return 'No shifts scheduled for today or upcoming dates.'
+})
 
 onMounted(() => {
   void loadShifts()
