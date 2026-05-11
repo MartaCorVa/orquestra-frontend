@@ -11,8 +11,10 @@ import { useDashboardStore } from '../../../stores/dashboard'
 describe('DashboardView', () => {
   beforeEach(() => {
     localStorage.clear()
+    vi.restoreAllMocks()
     setActivePinia(createPinia())
-    vi.clearAllMocks()
+
+    setAuthRole('employee')
   })
 
   function setAuthRole(role: 'admin' | 'employee') {
@@ -20,13 +22,8 @@ describe('DashboardView', () => {
 
     localStorage.setItem('role', role)
 
-    if ('role' in authStore) {
-      ;(authStore as unknown as { role: string }).role = role
-    }
-
-    if ('userRole' in authStore) {
-      ;(authStore as unknown as { userRole: string }).userRole = role
-    }
+    ;(authStore as unknown as { role?: string }).role = role
+    ;(authStore as unknown as { userRole?: string }).userRole = role
 
     return authStore
   }
@@ -49,6 +46,7 @@ describe('DashboardView', () => {
 
   it('renders summary cards for admin', async () => {
     const dashboardStore = useDashboardStore()
+
     setAuthRole('admin')
 
     dashboardStore.summaryMetrics = {
@@ -76,6 +74,7 @@ describe('DashboardView', () => {
 
   it('does not render schedules to validate card for employees', async () => {
     const dashboardStore = useDashboardStore()
+
     setAuthRole('employee')
 
     dashboardStore.summaryMetrics = {
@@ -94,6 +93,7 @@ describe('DashboardView', () => {
     expect(wrapper.text()).toContain('Active employees')
     expect(wrapper.text()).toContain('Shifts this week')
     expect(wrapper.text()).toContain('Schedules')
+    expect(wrapper.findAll('article')).toHaveLength(3)
     expect(wrapper.text()).not.toContain('Schedules to validate')
   })
 
@@ -112,6 +112,8 @@ describe('DashboardView', () => {
 
   it('renders upcoming schedule shifts', async () => {
     const dashboardStore = useDashboardStore()
+
+    setAuthRole('employee')
 
     dashboardStore.recentSchedule = {
       id: 1,
@@ -142,6 +144,8 @@ describe('DashboardView', () => {
   it('renders overnight shifts with start and end day range', async () => {
     const dashboardStore = useDashboardStore()
 
+    setAuthRole('employee')
+
     dashboardStore.recentSchedule = {
       id: 1,
       shifts: [
@@ -169,6 +173,8 @@ describe('DashboardView', () => {
 
   it('shows empty state when there is no upcoming schedule', async () => {
     const dashboardStore = useDashboardStore()
+
+    setAuthRole('employee')
 
     dashboardStore.recentSchedule = null
 
