@@ -10,6 +10,7 @@ import { useDashboardStore } from '../../../stores/dashboard'
 
 describe('DashboardView', () => {
   beforeEach(() => {
+    localStorage.clear()
     setActivePinia(createPinia())
     vi.clearAllMocks()
   })
@@ -62,22 +63,22 @@ describe('DashboardView', () => {
   it('does not render schedules to validate card for employees', async () => {
     const dashboardStore = useDashboardStore()
     const authStore = useAuthStore()
-    
+
     authStore.userRole = 'employee'
-    
+
     dashboardStore.summaryMetrics = {
       active_employees: 5,
       weekly_shifts: 12,
       schedules: 3,
       pending_validations: 1,
     }
-  
+
     vi.spyOn(dashboardStore, 'loadDashboardData').mockResolvedValue()
-  
+
     const wrapper = mountView()
-  
+
     await nextTick()
-  
+
     expect(wrapper.text()).toContain('Active employees')
     expect(wrapper.text()).toContain('Shifts this week')
     expect(wrapper.text()).toContain('Schedules')
@@ -124,6 +125,48 @@ describe('DashboardView', () => {
     expect(wrapper.text()).toContain('Morning Shift')
     expect(wrapper.text()).toContain('09:00 - 17:00')
     expect(wrapper.text()).toContain('2 employees assigned')
+  })
+
+  it('renders overnight shifts with start and end day range', async () => {
+    const dashboardStore = useDashboardStore()
+
+    dashboardStore.recentSchedule = {
+      id: 1,
+      shifts: [
+        {
+          start_date: '2026-05-04',
+          end_date: '2026-05-05',
+          start_time: '22:00:00',
+          end_time: '06:00:00',
+          status: 'planned',
+          number_of_employees: 1,
+        },
+      ],
+    }
+
+    vi.spyOn(dashboardStore, 'loadDashboardData').mockResolvedValue()
+
+    const wrapper = mountView()
+
+    await nextTick()
+
+    expect(wrapper.text()).toContain('Monday - Tuesday')
+    expect(wrapper.text()).toContain('Night Shift')
+    expect(wrapper.text()).toContain('22:00 - 06:00')
+  })
+
+  it('shows empty state when there is no upcoming schedule', async () => {
+    const dashboardStore = useDashboardStore()
+
+    dashboardStore.recentSchedule = null
+
+    vi.spyOn(dashboardStore, 'loadDashboardData').mockResolvedValue()
+
+    const wrapper = mountView()
+
+    await nextTick()
+
+    expect(wrapper.text()).toContain('No upcoming schedule available.')
   })
 
   it('shows recent activity for admin users', async () => {
