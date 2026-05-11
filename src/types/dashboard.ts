@@ -1,6 +1,5 @@
 export interface RecentScheduleShift {
-  start_date: string
-  end_date: string
+  date: string
   start_time: string
   end_time: string
   status: string
