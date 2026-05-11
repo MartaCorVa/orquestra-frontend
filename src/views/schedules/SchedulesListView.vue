@@ -296,9 +296,11 @@
 
       <SchedulesCalendar
         v-else
+        :key="`${selectedStartDate}-${selectedEndDate}-${selectedStatus}`"
         :schedules="filteredSchedules"
         :is-loading="isLoading"
         :has-error="hasError"
+        :initial-date="selectedStartDate || filteredSchedules[0]?.start_date"
       />
 
       <p

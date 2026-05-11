@@ -39,6 +39,7 @@ interface Props {
   schedules: Schedule[]
   isLoading: boolean
   hasError: boolean
+  initialDate?: string
 }
 
 const props = defineProps<Props>()
@@ -103,6 +104,7 @@ const events = computed<EventInput[]>(() =>
 const calendarOptions = computed<CalendarOptions>(() => ({
   plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
   initialView: 'dayGridMonth',
+  initialDate: props.initialDate,
   height: 'auto',
   firstDay: 1,
   editable: false,
