@@ -304,11 +304,18 @@ const validationMessage = computed<string>(() => {
 
   const start = dayjs(`${localForm.start_date}T${localForm.start_time}`)
   const end = dayjs(`${localForm.end_date}T${localForm.end_time}`)
-
+  
   if (!start.isValid() || !end.isValid()) {
     return 'Please enter valid start and end date/time values.'
   }
-
+  
+  if (
+    localForm.start_date === localForm.end_date &&
+    localForm.end_time <= localForm.start_time
+  ) {
+    return 'End time must be later than start time when the shift starts and ends on the same day.'
+  }
+  
   if (!end.isAfter(start)) {
     return 'End date and time must be later than start date and time.'
   }

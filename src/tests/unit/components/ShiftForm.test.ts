@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest'
 import { mount } from '@vue/test-utils'
 
-import ShiftForm from '../../components/shifts/ShiftForm.vue'
-import { getActiveContractByEmployee } from '../../api/contracts'
-import { activeContractMock } from '../mocks/contracts'
-import { employeesMock } from '../mocks/employees'
-import { schedulesMock } from '../mocks/schedules'
+import ShiftForm from '../../../components/shifts/ShiftForm.vue'
+import { getActiveContractByEmployee } from '../../../api/contracts'
+import { activeContractMock } from '../../mocks/contracts'
+import { employeesMock } from '../../mocks/employees'
+import { schedulesMock } from '../../mocks/schedules'
 
-vi.mock('../../api/contracts', () => ({
+vi.mock('../../../api/contracts', () => ({
   getActiveContractByEmployee: vi.fn(),
 }))
 
@@ -81,8 +81,10 @@ describe('ShiftForm', () => {
     ])
   })
 
-  it('shows an error when end datetime is before start datetime', async () => {
+  it('shows an error when end time is before start time on the same day', async () => {
     const wrapper = mountComponent({
+      start_date: '2026-05-10',
+      end_date: '2026-05-10',
       start_time: '18:00',
       end_time: '10:00',
     })
@@ -90,9 +92,33 @@ describe('ShiftForm', () => {
     await wrapper.get('form').trigger('submit.prevent')
 
     expect(wrapper.text()).toContain(
-      'End date and time must be later than start date and time.',
+      'End time must be later than start time when the shift starts and ends on the same day.',
     )
     expect(wrapper.emitted('submit')).toBeUndefined()
+  })
+
+  it('allows overnight shifts when end date is after start date', async () => {
+    const wrapper = mountComponent({
+      start_date: '2026-05-10',
+      end_date: '2026-05-11',
+      start_time: '18:00',
+      end_time: '10:00',
+    })
+  
+    await wrapper.get('form').trigger('submit.prevent')
+  
+    expect(wrapper.emitted('submit')).toEqual([
+      [
+        {
+          start_datetime: '2026-05-10T18:00:00',
+          end_datetime: '2026-05-11T10:00:00',
+          creation_type: 'manual',
+          status: 'planned',
+          schedule_id: 1,
+          employee_id: null,
+        },
+      ],
+    ])
   })
 
   it('shows an error when shift dates are outside schedule range', async () => {
