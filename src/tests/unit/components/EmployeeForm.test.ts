@@ -1,8 +1,8 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 
-import EmployeeForm from '../../components/employees/EmployeeForm.vue'
-import { activeContractMock } from '../mocks/contracts'
+import EmployeeForm from '../../../components/employees/EmployeeForm.vue'
+import { activeContractMock } from '../../mocks/contracts'
 
 const employeeForm = {
   first_name: 'Marta',

@@ -1,14 +1,14 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import RecurrentShiftForm from '../../components/shifts/RecurrentShiftForm.vue'
-import { getActiveContractByEmployee } from '../../api/contracts'
-import { activeContractMock } from '../mocks/contracts'
-import { employeesMock } from '../mocks/employees'
-import { schedulesMock } from '../mocks/schedules'
-import type { Weekday } from '../../api/shifts'
+import RecurrentShiftForm from '../../../components/shifts/RecurrentShiftForm.vue'
+import { getActiveContractByEmployee } from '../../../api/contracts'
+import { activeContractMock } from '../../mocks/contracts'
+import { employeesMock } from '../../mocks/employees'
+import { schedulesMock } from '../../mocks/schedules'
+import type { Weekday } from '../../../api/shifts'
 
-vi.mock('../../api/contracts', () => ({
+vi.mock('../../../api/contracts', () => ({
   getActiveContractByEmployee: vi.fn(),
 }))
 
@@ -113,16 +113,32 @@ describe('RecurrentShiftForm', () => {
     expect(wrapper.emitted('submit')).toBeUndefined()
   })
 
-  it('shows validation error when end time is before start time', async () => {
+  it('allows overnight recurrent shifts when end time is before start time', async () => {
     const wrapper = mountComponent({
+      start_date: '2026-05-06',
+      end_date: '2026-05-20',
       start_time: '18:00',
       end_time: '09:00',
     })
-
+  
     await wrapper.get('form').trigger('submit.prevent')
-
-    expect(wrapper.text()).toContain('End time must be later than start time.')
-    expect(wrapper.emitted('submit')).toBeUndefined()
+  
+    expect(wrapper.text()).not.toContain('End time must be later than start time.')
+    expect(wrapper.emitted('submit')).toEqual([
+      [
+        {
+          schedule_id: 1,
+          start_date: '2026-05-06',
+          end_date: '2026-05-20',
+          start_time: '18:00',
+          end_time: '09:00',
+          weekdays: ['monday', 'tuesday'],
+          creation_type: 'manual',
+          status: 'planned',
+          employee_id: null,
+        },
+      ],
+    ])
   })
 
   it('loads active contract and applies weekdays and fixed schedule when employee changes', async () => {
