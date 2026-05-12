@@ -475,6 +475,15 @@ function validateForm(): boolean {
       'Preferred start time and end time are required when fixed schedule is enabled.'
     return false
   }
+  
+  if (
+    form.contract.has_fixed_schedule &&
+    form.contract.preferred_start_time === form.contract.preferred_end_time
+  ) {
+    localError.value =
+      'Preferred start time and end time cannot be the same when fixed schedule is enabled.'
+    return false
+  }
 
   return true
 }
