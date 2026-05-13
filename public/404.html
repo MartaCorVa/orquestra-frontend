@@ -1,0 +1,11 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script>
+      const path = window.location.pathname.replace('/orquestra-frontend', '')
+      window.location.replace('/orquestra-frontend/?redirect=' + encodeURIComponent(path))
+    </script>
+  </head>
+  <body></body>
+</html>
