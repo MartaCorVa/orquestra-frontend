@@ -6,6 +6,13 @@ import router from './router'
 import { useAuthStore } from './stores/auth'
 import './assets/styles/main.css'
 
+const params = new URLSearchParams(window.location.search)
+const redirect = params.get('redirect')
+
+if (redirect) {
+  window.history.replaceState(null, '', `/orquestra-frontend${redirect}`)
+}
+
 const app = createApp(App)
 const pinia = createPinia()
 
