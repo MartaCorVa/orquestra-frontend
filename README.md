@@ -17,7 +17,15 @@ This repository contains the frontend of the system, built as a Single Page Appl
 * Axios
 * Day.js
 * FullCalendar (used for schedule visualization)
-* Chart.js
+
+---
+
+## 📋 Requirements
+
+The project was developed and tested using:
+
+- Node.js 22
+- npm 10
 
 ---
 
@@ -58,17 +66,19 @@ You can configure this using environment variables.
 
 ## ⚙️ Environment variables
 
-Create a `.env` file in the root of the project:
+An example environment configuration file is included in the repository:
 
-```
-VITE_API_BASE_URL=http://localhost:8000
-```
-
-Example file:
-
-```
+```bash
 .env.example
 ```
+
+Copy the file and adjust the values if necessary before starting the application.
+---
+
+## 🐳 Docker compatibility
+
+The frontend is fully compatible with the Docker-based environment defined in the main Orquestra repository.
+
 ---
 
 ## 🔐 Authentication flow
@@ -103,6 +113,28 @@ The application uses JWT-based authentication and supports a **first-login passw
 * After success:
   * `must_change_password` is set to false  
   * the user is redirected to the dashboard  
+
+---
+
+## 👤 Demo Accounts
+
+The following accounts can be used to test the application.
+
+### Administrator account
+
+```text
+Email: admin@orquestra.com
+Password: admin123
+```
+
+### Employee account
+
+```text
+Email: marta@orquestra.com
+Password: user123
+```
+
+The administrator account provides full access to management and planning features, while the employee account allows testing role-based restrictions and employee-specific views.
 
 ---
 
@@ -587,7 +619,7 @@ npm run test:coverage
 
 * Forms validation (ShiftForm, EmployeeForm, etc.)
 * View logic (ShiftCreateView, EquityAnalysisView)
-API interactions and error handling
+* API interactions and error handling
 
 ---
 
@@ -657,6 +689,7 @@ src/
 
 * The frontend is designed around **employee management**, not separate user management  
 * Account creation is performed through employee onboarding  
-* The UI prioritizes clarity and stability for desktop usage  
+* The application is primarily designed for desktop usage
+* Some complex planning and visualization views are not optimized for small mobile screens
 * Layout decisions (fixed widths, table stability) were made to improve usability and visual consistency  
 * Schedule data can be explored through both table and calendar views, sharing the same filtering logic  
