@@ -73,6 +73,7 @@ An example environment configuration file is included in the repository:
 ```
 
 Copy the file and adjust the values if necessary before starting the application.
+
 ---
 
 ## 🐳 Docker compatibility
